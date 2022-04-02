@@ -1089,7 +1089,7 @@ button.min_button:disabled, button.max_button:disabled { background-color: #bbb;
 }
 
 .card_list > .card_item > .card_data {
-    display: block; position: relative; margin: 0; padding: 0; padding-left: 8px; flex: 1;
+    display: block; position: relative; margin: 0; padding: 0; padding-left: 8px; flex: 1; overflow-x: hidden;
 }
 
 .card_list > .card_item > .card_data > * {
@@ -1097,7 +1097,7 @@ button.min_button:disabled, button.max_button:disabled { background-color: #bbb;
 }
 
 .card_list .card_data > .card_name {
-    margin: 0; padding: 2px 0 11px;
+    margin: 0; padding: 2px 0 11px; overflow: hidden;
     color: #f69; font-size: 20px; line-height: 20px; font-weight: bold;
     white-space: nowrap; text-overflow: ellipsis; cursor: default; user-select: none; -ms-user-select: none;
     background-image: -moz-linear-gradient(left, #ccc, #ccc 3px, transparent 3px, transparent 7px);
