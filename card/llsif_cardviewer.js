@@ -89,7 +89,7 @@
 /* initCardViewer
 ====================================================================== */
 function initCardViewer(success_func) {
-  const dbdir = location.hostname == 'localhost' ? '/Github/llsif/db/' : 'llsif/db/';
+  const dbdir = location.hostname == 'localhost' ? '/Github/llsif/db/' : '/llsif/db/';
   var files = [dbdir + 'param_diff.json', dbdir + 'cards.json', dbdir + 'members.json', dbdir + 'idol_skill.json', dbdir + 'accessories.json'];
 
   var urlquery = getURLQueryParam();
