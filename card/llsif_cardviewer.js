@@ -380,10 +380,18 @@ function calcDeckParameter(obj, guest, idol_skill) {
 ====================================================================== */
 function toIconAssetPath(card, idolized) {
   const idol_type = card.o || idolized ? 'rankup_icon' : 'normal_icon';
-  switch(card.d[0]) {
-    case 1: return DB_SERVER + 'assets/image/units/u_' + idol_type + '_' + card.d[1] + '.png'; break;
-    case 2: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/u_' + card.d[1] + '_' + idol_type + '.png'; break;
-    case 3: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/u_' + idol_type + '_' + card.d[1] + '.png'; break;
+  if(location.hostname == 'localhost') {
+    switch(card.d[0]) {
+      case 1: return DB_SERVER + 'assets/image/units/u_' + idol_type + '_' + card.d[1] + '.png'; break;
+      case 2: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/u_' + card.d[1] + '_' + idol_type + '.png'; break;
+      case 3: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/u_' + idol_type + '_' + card.d[1] + '.png'; break;
+    }
+  } else {
+    switch(card.d[0]) {
+      case 1: return DB_SERVER + 'assets/image/units/tx_u_' + idol_type + '_' + card.d[1] + '.texb.png'; break;
+      case 2: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/tx_u_' + card.d[1] + '_' + idol_type + '.texb.png'; break;
+      case 3: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/tx_u_' + idol_type + '_' + card.d[1] + '.texb.png'; break;
+    }
   }
 }
 
