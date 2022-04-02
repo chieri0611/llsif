@@ -1,4 +1,4 @@
-@charset "utf-8";
+﻿@charset "utf-8";
 
 /* **********************************************************************
 * 
@@ -7,7 +7,7 @@
 *  Description: llsif Page CSS
 *  Author: chieri0611
 *  Create: 2022/02/13
-*  Update: 2022/02/13
+*  Update: 2022/04/03
 *
 ********************************************************************** */
 
@@ -28,11 +28,38 @@
 *    [-] Heading Text
 *    [-] Section Heading, Content Block
 *    [-] Button
+*    [-] Button(Cancel Button)
+*    [-] Button(Close Button)
+*    [-] Button(Small Button)
+*    [-] Button(Back Button)
+*    [-] Button(Menu Button)
+*    [-] Paging
 *    [-] Textbox
+*    [-] SpinBox
 *    [-] Checkbox
 *    [-] Switch Button
+*    [-] Switch Button(Idolized Switch)
 *    [-] Listbox
-*  
+*
+*  Deck Design
+*    [-] Deck Frame
+*    [-] Center Skill
+*    [-] Deck Members
+*    [-] Deck Parameter
+*    [-] Guest Member
+*    [-] Deck Menu
+*    [-] Live Song Frame
+*
+*  Card Detail Design
+*    [-] Detail Dialog
+*    [-] Image Block
+*    [-] Detail Block
+*
+*  Card Viewer Design
+*    [-] Filter Menu
+*    [-] Card List
+*    [-] Filter Dialog
+*
 ====================================================================== */
 
 
@@ -168,7 +195,7 @@ body.theme_dialog > header > .title {
     z-index: 900; background-color: rgba(0,0,0,0.376);
 }
 .overlay.loading { z-index: 902; }
-
+.overlay.hidden { display: none; }
 
 /* Dialog
 ====================================================================== */
@@ -187,13 +214,14 @@ body.theme_dialog > header > .title {
 .dialog.hidden { transform: translate(-50%, -50%) scale(0.66); opacity: 0; }
 
 .dialog > .dialog_content {
-    width: 100%; flex: 1; padding: 2px 5px; overflow-y: auto; border: 10px solid transparent;
+    display: block; width: 100%; flex: 1; padding: 2px 5px; overflow-y: auto;
+    border: 10px solid transparent; flex-shrink: 0;
     scrollbar-face-color: #998e66; scrollbar-track-color: #fff;
     scrollbar-arrow-color: #998e66; scrollbar-shadow-color: #998e66;
 }
-.dialog > .dialog_content::-webkit-scrollbar { width: 12px; }
-.dialog > .dialog_content::-webkit-scrollbar-track { background: #fff; border-radius: 6px; }
-.dialog > .dialog_content::-webkit-scrollbar-thumb { background: #998e66; border-radius: 6px; }
+.dialog > .dialog_content::-webkit-scrollbar { width: 8px; }
+.dialog > .dialog_content::-webkit-scrollbar-track { background: #fff; border-radius: 4px; }
+.dialog > .dialog_content::-webkit-scrollbar-thumb { background: #998e66; border-radius: 4px; }
 
 body.theme_dialog > header, body.theme_dialog > footer, .dialog > header, .dialog > footer {
     left: 0; width: 100%;
@@ -348,12 +376,70 @@ button {
     appearance: none; -webkit-appearance: none; -webkit-tap-highlight-color: transparent;
 }
 
+button:active {
+    color: #fcd; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20250%20100%22%20width%3D%22150px%22%20height%3D%2260px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cpath%20fill%3D%22%23000%22%20fill-opacity%3D%220.2%22%20d%3D%22M5%2C31%20l26%2C-26%20l204%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C54%20l-26%2C26%20l-204%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-54%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%2C26%20l26%2C-26%20l205%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C55%20l-26%2C26%20l-205%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-55%20z%22%3E%3C%2Fpath%3E%3Cpath%20stroke%3D%22%23fcd%22%20fill%3D%22none%22%20stroke-width%3D%224%22%20d%3D%22M5%2C29%20l24%2C-24%20l201%2C0%20a11%2C11%200%200%2C1%2011%2C11%20l0%2C51%20l-24%2C24%20l-201%2C0%20a11%2C11%200%200%2C1%20-11%2C-11%20l0%2C-51%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23fcd%22%20d%3D%22M10%2C32%20l22%2C-22%20l192%2C0%20a12%2C12%200%200%2C1%2012%2C12%20l0%2C38%20a12%2C12%200%200%2C1%20-12%2C12%20l-202%2C0%20a12%2C12%200%200%2C1%20-12%2C-12%20l0%2C-26%20z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E');
+}
+
+button:disabled {
+    color: #bbb; cursor: default; pointer-events: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20250%20100%22%20width%3D%22150px%22%20height%3D%2260px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%2C26%20l26%2C-26%20l205%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C55%20l-26%2C26%20l-205%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-55%20z%22%3E%3C%2Fpath%3E%3Cpath%20stroke%3D%22%23bbb%22%20fill%3D%22none%22%20stroke-width%3D%224%22%20d%3D%22M5%2C29%20l24%2C-24%20l201%2C0%20a11%2C11%200%200%2C1%2011%2C11%20l0%2C51%20l-24%2C24%20l-201%2C0%20a11%2C11%200%200%2C1%20-11%2C-11%20l0%2C-51%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23bbb%22%20d%3D%22M10%2C32%20l22%2C-22%20l192%2C0%20a12%2C12%200%200%2C1%2012%2C12%20l0%2C38%20a12%2C12%200%200%2C1%20-12%2C12%20l-202%2C0%20a12%2C12%200%200%2C1%20-12%2C-12%20l0%2C-26%20z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E');
+}
+
+footer > button { display: inline-block; margin-left: 8px; margin-right: 8px; }
+
+button.info_button { display: none; }
+
+
+/* Button(Cancel Button)
+====================================================================== */
 button.cancel_button {
     color: #00b2ee; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20250%20100%22%20width%3D%22150px%22%20height%3D%2260px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cpath%20fill%3D%22%23000%22%20fill-opacity%3D%220.2%22%20d%3D%22M5%2C31%20l26%2C-26%20l204%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C54%20l-26%2C26%20l-204%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-54%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%2C26%20l26%2C-26%20l205%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C55%20l-26%2C26%20l-205%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-55%20z%22%3E%3C%2Fpath%3E%3Cpath%20stroke%3D%22%2300b2ee%22%20fill%3D%22none%22%20stroke-width%3D%224%22%20d%3D%22M5%2C29%20l24%2C-24%20l201%2C0%20a11%2C11%200%200%2C1%2011%2C11%20l0%2C51%20l-24%2C24%20l-201%2C0%20a11%2C11%200%200%2C1%20-11%2C-11%20l0%2C-51%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%2300b2ee%22%20d%3D%22M10%2C32%20l22%2C-22%20l192%2C0%20a12%2C12%200%200%2C1%2012%2C12%20l0%2C38%20a12%2C12%200%200%2C1%20-12%2C12%20l-202%2C0%20a12%2C12%200%200%2C1%20-12%2C-12%20l0%2C-26%20z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E');
 }
 
-button.info_button { display: none; }
+button.cancel_button:active {
+    color: #aeeaff; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20250%20100%22%20width%3D%22150px%22%20height%3D%2260px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cpath%20fill%3D%22%23000%22%20fill-opacity%3D%220.2%22%20d%3D%22M5%2C31%20l26%2C-26%20l204%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C54%20l-26%2C26%20l-204%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-54%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%2C26%20l26%2C-26%20l205%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C55%20l-26%2C26%20l-205%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-55%20z%22%3E%3C%2Fpath%3E%3Cpath%20stroke%3D%22%23aeeaff%22%20fill%3D%22none%22%20stroke-width%3D%224%22%20d%3D%22M5%2C29%20l24%2C-24%20l201%2C0%20a11%2C11%200%200%2C1%2011%2C11%20l0%2C51%20l-24%2C24%20l-201%2C0%20a11%2C11%200%200%2C1%20-11%2C-11%20l0%2C-51%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23aeeaff%22%20d%3D%22M10%2C32%20l22%2C-22%20l192%2C0%20a12%2C12%200%200%2C1%2012%2C12%20l0%2C38%20a12%2C12%200%200%2C1%20-12%2C12%20l-202%2C0%20a12%2C12%200%200%2C1%20-12%2C-12%20l0%2C-26%20z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E');
+}
 
+
+/* Button(Close Button)
+====================================================================== */
+button.dialog_close {
+    display: block; position: relative; width: 42px; height: 42px; overflow: hidden;
+    background-color: #f69; border-radius: 50%; border: 2px solid #fff;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    text-decoration: none; outline: none;
+    cursor: pointer; user-select: none; -ms-user-select: none;
+}
+button.dialog_close, button.dialog_close:active, button.dialog_close:disabled {
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%2242px%22%20height%3D%2242px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cline%20x1%3D%2234%22%20y1%3D%2234%22%20x2%3D%2266%22%20y2%3D%2266%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2212%22%20stroke-linecap%3D%22round%22%3E%3C%2Fline%3E%3Cline%20x1%3D%2266%22%20y1%3D%2234%22%20x2%3D%2234%22%20y2%3D%2266%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2212%22%20stroke-linecap%3D%22round%22%3E%3C%2Fline%3E%3C%2Fsvg%3E');
+}
+
+button.dialog_close:active { background-color: #fcd; }
+button.dialog_close:disabled { background-color: #bbb; }
+
+
+/* Button(Small Button)
+====================================================================== */
+button.small_button {
+    display: block; position: relative; width: auto; min-width: 100px; height: 42px; overflow: hidden; padding: 6px 14px;
+    background-color: #f69; border-radius: 23px; border: 2px solid #fff; background-image: none;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    color: #f69; font-size: 18px; line-height: 18px; text-align: center; font-weight: bold;
+    text-decoration: none; outline: none;
+    text-shadow: 
+      2px  2px 1px #fff, -2px  2px 1px #fff, 2px -2px 1px #fff, -2px -2px 1px #fff,
+      2px  0px 1px #fff, 0px  2px 1px #fff, -2px  0px 1px #fff, 0px -2px 1px #fff;
+    letter-spacing: normal; white-space: nowrap; text-overflow: ellipsis;
+    cursor: pointer; user-select: none; -ms-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button.small_button:active { color: #fcd; background-color: #fcd; background-image: none; }
+button.small_button:disabled { color: #fcd; background-color: #fcd; background-image: none; }
+
+
+/* Button(Back Button)
+====================================================================== */
 a.back_button {
     display: block; position: relative; width: 70px; height: 46px; overflow: hidden;
     background-color: #f69; border-radius: 23px; border: 2px solid #fff;
@@ -370,17 +456,12 @@ a.back_button:before{
     background-repeat: no-repeat; background-size: 100%;
 }
 
-button.dialog_close {
-    display: block; position: relative; width: 42px; min-width: auto; height: 42px; overflow: hidden;
-    background-color: #f69; border-radius: 50%; border: 2px solid #fff;
-    box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    text-decoration: none; outline: none;
-    cursor: pointer; user-select: none; -ms-user-select: none;
-}
-button.dialog_close, button.dialog_close:active, button.dialog_close:disabled {
-    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%2242px%22%20height%3D%2242px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cline%20x1%3D%2234%22%20y1%3D%2234%22%20x2%3D%2266%22%20y2%3D%2266%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2212%22%20stroke-linecap%3D%22round%22%3E%3C%2Fline%3E%3Cline%20x1%3D%2266%22%20y1%3D%2234%22%20x2%3D%2234%22%20y2%3D%2266%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2212%22%20stroke-linecap%3D%22round%22%3E%3C%2Fline%3E%3C%2Fsvg%3E');
-}
+a.back_button:active { background-color: #fcd; }
+a.back_button[disabled] { cursor: default; pointer-events: none; background-color: #bbb; }
 
+
+/* Button(Menu Button)
+====================================================================== */
 .menu_frame a.menu_button {
     display: inline-block; position: relative; width: 290px; height: 70px; overflow: hidden;
     margin: 12px 8px; padding: 6px 6px 4px 86px;
@@ -399,24 +480,58 @@ button.dialog_close, button.dialog_close:active, button.dialog_close:disabled {
     display: inline-block; position: relative; max-height: 100%; max-width: 100%;
 }
 
-button:active {
-    color: #fcd; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20250%20100%22%20width%3D%22150px%22%20height%3D%2260px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cpath%20fill%3D%22%23000%22%20fill-opacity%3D%220.2%22%20d%3D%22M5%2C31%20l26%2C-26%20l204%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C54%20l-26%2C26%20l-204%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-54%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%2C26%20l26%2C-26%20l205%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C55%20l-26%2C26%20l-205%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-55%20z%22%3E%3C%2Fpath%3E%3Cpath%20stroke%3D%22%23fcd%22%20fill%3D%22none%22%20stroke-width%3D%224%22%20d%3D%22M5%2C29%20l24%2C-24%20l201%2C0%20a11%2C11%200%200%2C1%2011%2C11%20l0%2C51%20l-24%2C24%20l-201%2C0%20a11%2C11%200%200%2C1%20-11%2C-11%20l0%2C-51%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23fcd%22%20d%3D%22M10%2C32%20l22%2C-22%20l192%2C0%20a12%2C12%200%200%2C1%2012%2C12%20l0%2C38%20a12%2C12%200%200%2C1%20-12%2C12%20l-202%2C0%20a12%2C12%200%200%2C1%20-12%2C-12%20l0%2C-26%20z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E');
+a.menu_button:active { background-color: #fcd; }
+a.menu_button[disabled] { cursor: default; pointer-events: none; background-color: #bbb; }
+
+
+/* Paging
+====================================================================== */
+.paging {
+    display: block; position: relative; max-width: 100%; margin: 4px 0 14px; padding: 0 50px;
 }
-button.cancel_button:active {
-    color: #aeeaff; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20250%20100%22%20width%3D%22150px%22%20height%3D%2260px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cpath%20fill%3D%22%23000%22%20fill-opacity%3D%220.2%22%20d%3D%22M5%2C31%20l26%2C-26%20l204%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C54%20l-26%2C26%20l-204%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-54%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%2C26%20l26%2C-26%20l205%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C55%20l-26%2C26%20l-205%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-55%20z%22%3E%3C%2Fpath%3E%3Cpath%20stroke%3D%22%23aeeaff%22%20fill%3D%22none%22%20stroke-width%3D%224%22%20d%3D%22M5%2C29%20l24%2C-24%20l201%2C0%20a11%2C11%200%200%2C1%2011%2C11%20l0%2C51%20l-24%2C24%20l-201%2C0%20a11%2C11%200%200%2C1%20-11%2C-11%20l0%2C-51%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23aeeaff%22%20d%3D%22M10%2C32%20l22%2C-22%20l192%2C0%20a12%2C12%200%200%2C1%2012%2C12%20l0%2C38%20a12%2C12%200%200%2C1%20-12%2C12%20l-202%2C0%20a12%2C12%200%200%2C1%20-12%2C-12%20l0%2C-26%20z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E');
-
+.paging > .paging_main {
+    display: block; position: relative; width: 100%; margin: 0; padding: 0 0 2px;
+    overflow-x: scroll; white-space: nowrap;
+    -ms-overflow-style: none; scrollbar-height: none;
+}
+.paging > .paging_main::-webkit-scrollbar { display: none; }
+.paging > .paging_main > .paging_container {
+    display: block; position: relative; min-width: 100%; margin: 0; padding: 0;
+    white-space: nowrap; text-align: center;
 }
 
-a.menu_button:active, a.back_button:active, button.dialog_close:active { background-color: #fcd; }
+button.paging_button {
+    display: inline-block; position: relative; width: 54px; height: 40px; padding: 0 4px; overflow: hidden;
+    margin-left: 10px; background-color: #f69; background-image: none;
+    border-radius: 8px; border: 2px solid #fff; box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    color: #fff; line-height: 36px; text-shadow: none; text-decoration: none; outline: none;
+    cursor: pointer; user-select: none; -ms-user-select: none;
+}
+button.paging_button.select {
+    background-color: #ff9922;
+    text-shadow: 
+      2px  2px 1px #d17d1c, -2px  2px 1px #d17d1c, 2px -2px 1px #d17d1c, -2px -2px 1px #d17d1c,
+      2px  0px 1px #d17d1c, 0px  2px 1px #d17d1c, -2px  0px 1px #d17d1c, 0px -2px 1px #d17d1c;
+    cursor: default; pointer-events: none;
+}
+button.paging_button:active { background-color: #fcd; }
+button.paging_button:disabled { background-color: #bbb; }
+.paging_main > button.paging_button:first-child { margin-left: 0; }
 
-button:disabled, a.back_button[disabled], a.menu_button[disabled] { cursor: default; pointer-events: none; }
-a.menu_button[disabled], a.back_button[disabled], button.dialog_close:disabled { background-color: #bbb; }
-button:disabled {
-    color: #bbb; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20250%20100%22%20width%3D%22150px%22%20height%3D%2260px%22%20preserveAspectRatio%3D%22xMinYMid%22%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M0%2C26%20l26%2C-26%20l205%2C0%20a15%2C15%200%200%2C1%2015%2C15%20l0%2C55%20l-26%2C26%20l-205%2C0%20a15%2C15%200%200%2C1%20-15%2C-15%20l0%2C-55%20z%22%3E%3C%2Fpath%3E%3Cpath%20stroke%3D%22%23bbb%22%20fill%3D%22none%22%20stroke-width%3D%224%22%20d%3D%22M5%2C29%20l24%2C-24%20l201%2C0%20a11%2C11%200%200%2C1%2011%2C11%20l0%2C51%20l-24%2C24%20l-201%2C0%20a11%2C11%200%200%2C1%20-11%2C-11%20l0%2C-51%20z%22%3E%3C%2Fpath%3E%3Cpath%20fill%3D%22%23bbb%22%20d%3D%22M10%2C32%20l22%2C-22%20l192%2C0%20a12%2C12%200%200%2C1%2012%2C12%20l0%2C38%20a12%2C12%200%200%2C1%20-12%2C12%20l-202%2C0%20a12%2C12%200%200%2C1%20-12%2C-12%20l0%2C-26%20z%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E');
+.paging > button.paging_left, .paging > button.paging_right {
+    display: block; position: absolute; top: 0; width: 50px; height: 100%; margin: 0; padding: 0;
+    background: none; cursor: pointer; user-select: none; -ms-user-select: none;
 }
 
-footer > button { display: inline-block; margin-left: 8px; margin-right: 8px; }
-
+.paging > button.paging_left { left: 0; }
+.paging > button.paging_right { right: 0; }
+button.paging_left:after, button.paging_right:after {
+    display: block; position: absolute; content: ''; width: 8px; height: 10px;
+    top: 0; bottom: 0; left: 0; right: 0; margin: auto;
+    border: 10px solid transparent; box-sizing: border-box;
+}
+button.paging_left:after { border-left: none; border-right: 8px solid #f69;}
+button.paging_right:after { border-left: 8px solid #f69; border-right: none; }
 
 
 /* Textbox
@@ -453,6 +568,44 @@ input[type="text"] + .text_range, input[type="number"] + .text_range {
 input[type="text"]::-webkit-outer-spin-button, input[type="text"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none; margin: 0;
+}
+
+
+/* Spinbox
+====================================================================== */
+.spin_box {
+    display: block; position: relative; width: 150px; min-width: 150px; padding: 0 40px; overflow: hidden;
+}
+
+.spin_box > button, button.min_button, button.max_button {
+    display: block; position: absolute; top: calc(50% - 15px); width: 30px; height: 30px; overflow: hidden;
+    background-color: #f69; background-image: none;
+    border-radius: 8px; border: 2px solid #fff; box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    text-shadow: none; text-decoration: none; outline: none;
+    cursor: pointer; user-select: none; -ms-user-select: none;
+}
+.spin_box > button:before, button.min_button:before, button.max_button:before {
+    display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;
+    background-image: none; color: #fff; font-size: 20px; font-weight: bold; line-height: 26px;
+}
+.spin_box > button.spindown_button { left: 4px; }
+.spin_box > button.spinup_button { right: 4px; }
+.spin_box > button.spindown_button:before { content: '－'; }
+.spin_box > button.spinup_button:before { content: '＋'; }
+.spin_box > button:active { background-color: #fcd; }
+.spin_box > button:disabled { background-color: #bbb; }
+
+button.min_button, button.max_button { width: 50px; font-size: 16px; }
+button.min_button:before, button.max_button:before { font-size: 16px; }
+button.min_button:before { content: 'MIN'; }
+button.max_button:before { content: 'MAX'; }
+button.min_button:active, button.max_button:active { background-color: #fcd; }
+button.min_button:disabled, button.max_button:disabled { background-color: #bbb; }
+
+.spin_box > input[type="number"].spin_value {
+    display: block; position: relative; width: 100%; min-width: auto; margin: 0;
+    border: 2px solid #ffbfda; border-radius: 8px; color: #00b3eb; text-align: center;
+    cursor: default;
 }
 
 
@@ -502,6 +655,7 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
 .switch_button > label:last-of-type { border-radius: 0 25px 25px 0; border-right-color: #f69; }
 .switch_button > input[type="radio"] { display: none; }
 .switch_button > input[type="radio"]:checked + label { background-color: #f69; color: #fff; }
+.switch_button > input[type="radio"]:disabled + label { cursor: default; pointer-events: none; }
 
 .switch_button.small > label {
     min-width: 70px; height: 40px; padding: 4px 2px;
@@ -512,6 +666,32 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
 .switch_button.small > label:last-of-type { border-radius: 0 20px 20px 0; }
 
 .radiobutton { display: none; }
+
+
+/* Switch Button(Idolized Switch)
+====================================================================== */
+.switch_button.idolized > label {
+    height: 40px; padding: 4px 4px;
+    border-top: 2px solid #fff; border-bottom: 2px solid #fff; border-right: 1px solid #fff;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.5); color: #fff; font-size: 18px;
+}
+.switch_button.idolized > label:first-of-type { border-radius: 20px 0 0 20px; border-left: 2px solid #fff; }
+.switch_button.idolized > label:last-of-type { border-radius: 0 20px 20px 0; border-right: 2px solid #fff; }
+.switch_button.idolized > input[type="radio"][value="normal"] + label {
+   background-color: #b2effc;
+   text-shadow: 
+     2px  2px 1px #359cc1, -2px  2px 1px #359cc1, 2px -2px 1px #359cc1, -2px -2px 1px #359cc1,
+     2px  0px 1px #359cc1, 0px  2px 1px #359cc1, -2px  0px 1px #359cc1, 0px -2px 1px #359cc1;
+
+}
+.switch_button.idolized > input[type="radio"][value="idolized"] + label {
+   background-color: #b6f0bb;
+   text-shadow: 
+     2px  2px 1px #42974b, -2px  2px 1px #42974b, 2px -2px 1px #42974b, -2px -2px 1px #42974b,
+     2px  0px 1px #42974b, 0px  2px 1px #42974b, -2px  0px 1px #42974b, 0px -2px 1px #42974b;
+}
+.switch_button.idolized > input[type="radio"][value="normal"]:checked + label { background-color: #00caf5; }
+.switch_button.idolized > input[type="radio"][value="idolized"]:checked + label { background-color: #0cce1e; }
 
 
 /* Listbox
@@ -546,4 +726,409 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
 .listbox > .listbox_frame:active > select { background-color: #fcd; }
 .listbox > .listbox_frame > select > option {
     background-color: #f69; color: #ffffff; font-size: 20px; line-height: 20px; font-weight: bold;
+}
+
+
+/* ----------------------------------------------------------------------
+*  Deck Design
+---------------------------------------------------------------------- */
+
+/* Deck Frame
+====================================================================== */
+.deck_frame {
+    display: block; position: relative; width: 100%; margin: 6px 0 14px; padding: 6px 2px;
+    background: -moz-linear-gradient(-45deg, #fee 23%, #fff 23%, #fff 50%, #fee 50%, #fee 73%, #fff 73%, #fff);
+    background: -webkit-linear-gradient(-45deg, #fee 23%, #fff 23%, #fff 50%, #fee 50%, #fee 73%, #fff 73%, #fff);
+    background: linear-gradient(-45deg, #fee 23%, #fff 23%, #fff 50%, #fee 50%, #fee 73%, #fff 73%, #fff);
+    background-color: #fff; border: 2px solid #f69; border-radius: 12px;
+    background-size: 60px 60px;
+}
+.deck_frame > h1 { position: absolute; top: 4px; left: 0; text-align: left; }
+
+
+/* Center Skill
+====================================================================== */
+.deck_frame .center_skill {
+    display: block; position: relative; width: 70%; margin: 0 4px 6px auto; padding: 4px 8px;
+    background-color: #fff; border: 1px solid #ccc; border-radius: 18px;
+}
+
+.deck_frame .center_skill > .center_skill_name {
+    display: block; position: relative; width: 100%; overflow: hidden;
+    color: #f69; font-size: 20px; line-height: 20px; font-weight: bold;
+    white-space: nowrap; text-overflow: ellipsis; cursor: default; user-select: none; -ms-user-select: none;
+}
+
+.deck_frame .center_skill > .center_skill_name:before {
+    content: 'センタースキル'; padding-left: 2px; padding-right: 8px;
+    color: #fff; font-size: 16px; line-height: 22px; font-weight: bold; cursor: default;
+    text-shadow: 
+      2px  2px 1px #f69, -2px  2px 1px #f69, 2px -2px 1px #f69, -2px -2px 1px #f69,
+      2px  0px 1px #f69, 0px  2px 1px #f69, -2px  0px 1px #f69, 0px -2px 1px #f69;
+}
+
+.deck_frame .center_skill > .center_skill_desc {
+    display: block; position: relative; width: 100%; padding-top: 2px;
+    color: #000; font-size: 18px; line-height: 20px; font-weight: normal;
+    cursor: default; user-select: none; -ms-user-select: none;
+}
+
+
+/* Deck Members
+====================================================================== */
+.deck_frame > .deck_members {
+    display: flex; position: relative; width: 100%; margin: 10px auto 0; padding: 0 4px;
+    flex-direction: row; flex-wrap: wrap; justify-content: center;
+}
+.deck_frame > h1 + .deck_members { margin-top: 38px; }
+
+.deck_members > .member_block { width: 100px; margin: 0; padding: 0 4px 8px; }
+.member_block > .member_icon {
+    display: block; position: relative; width: 100px; max-width: 100%;
+    margin: 0 auto; padding: 0;
+}
+.member_block > .member_icon:before {
+    display: block; position: absolute; bottom: 1px; left: 1px; width: 10px; height: 10px;
+    border: 1px solid #bbb; border-radius: 50%; background-color: #eee; content: '';
+}
+.member_block > .member_icon.idol_skill:before { background-color: #f69; border-color: #f69; }
+.member_block > .member_icon.blank:before { display: none; }
+
+.deck_members > .member_block:nth-of-type(5):nth-last-of-type(5) > .member_icon:after {
+    display: block; position: absolute; bottom: 0; left: 0; width: 100%; padding-left: 15px;
+    color: #fff; font-size: 16px; font-weight: bold; text-align: center; white-space: nowrap;
+    box-sizing: border-box; content: 'センター';
+    text-shadow:
+      2px  2px 1px #e7007b, -2px  2px 1px #e7007b, 2px -2px 1px #e7007b, -2px -2px 1px #e7007b,
+      2px  0px 1px #e7007b, 0px  2px 1px #e7007b, -2px  0px 1px #e7007b, 0px -2px 1px #e7007b;
+    cursor: default; user-select: none; -ms-user-select: none;
+}
+.member_icon.blank:after { display: none; }
+
+
+.member_icon > img.member_img {
+    display: block; position: relative; top: 0; left: 0; width: 100%; height: auto;
+    cursor: default; user-select: none; -ms-user-select: none;
+}
+
+
+.member_icon > img.member_frame {
+    display: block; position: absolute; top: 0; left: 0; width: 100%; height: auto;
+    cursor: default; user-select: none; -ms-user-select: none;
+}
+.member_icon > img.member_frame[src=""] { display: none; }
+.member_icon.blank > img.member_frame { display: none; }
+
+
+.member_icon > .member_level {
+    display: block; position: absolute; top: 0; left: 0; width: 100%;
+    color: #ee5500; font-size: 20px; font-weight: bold; white-space: nowrap;
+    text-shadow:
+      1px  1px 1px #fff, -1px  1px 1px #fff, 1px -1px 1px #fff, -1px -1px 1px #fff,
+      1px  0px 1px #fff, 0px  1px 1px #fff, -1px  0px 1px #fff, 0px -1px 1px #fff;
+    cursor: default; user-select: none; -ms-user-select: none;
+}
+.member_icon > .member_level:before { content: 'Lv'; font-size: 18px; }
+.member_icon.blank > .member_level { display: none; }
+.deck_members.editposition > .member_block > .member_icon > .member_level { display: none; }
+
+.deck_members.editposition > .member_block > .member_icon > .member_position {
+    display: block; position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; line-height: 22px;
+    background-color: #40240f; border-radius: 5px;
+    color: #ff972d; font-size: 20px; font-weight: bold; white-space: nowrap; text-align: center;
+    cursor: default; user-select: none; -ms-user-select: none;
+}
+
+
+.member_icon > .member_select {
+    display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    border: 3px solid #fb3; border-radius: 8px;
+}
+.member_icon > .member_select.select { display: block; }
+
+
+@media screen and (max-width:950px) {
+  .deck_frame > .deck_members { max-width: 700px; }
+  .deck_frame > .deck_members > .member_block { width: 20%; }
+  .deck_frame > .deck_members > .member_block:nth-child(2) { order: 5; }
+  .deck_frame > .deck_members > .member_block:nth-child(4) { order: 6; }
+  .deck_frame > .deck_members > .member_block:nth-child(6) { order: 7; }
+  .deck_frame > .deck_members > .member_block:nth-child(8) { order: 8; }
+}
+
+
+
+/* Deck Parameter
+====================================================================== */
+.deck_frame > .deck_param { display: flex; position: relative; width: 100%; padding: 4px; }
+
+.param_life, .param_smile, .param_pure, .param_cool {
+    display: block; position: relative; height: 30px; margin: 0 2px;
+    border-radius: 15px;
+}
+.param_life { background-color: #bfbfbf; }
+.param_smile { background-color: #ffccd5; }
+.param_pure { background-color: #99eadd; }
+.param_cool { background-color: #6ed0ee; }
+.deck_param > .param_life { flex: 1; }
+.deck_param > .param_smile, .deck_param > .param_pure, .deck_param > .param_cool { flex: 1.6; }
+
+.param_num {
+    display: block; position: absolute; width: 100%; height: 100%; top: 0; margin: 0; padding: 0;
+    font-size: 20px; line-height: 30px; font-weight: bold; text-align: center; 
+    white-space: nowrap; cursor: default; user-select: none; -ms-user-select: none;
+}
+.param_life > .param_num {
+    padding-left: 25px; color: #e50;
+    text-shadow: 
+        1px  1px 1px #fff, -1px  1px 1px #fff, 1px -1px 1px #fff, -1px -1px 1px #fff,
+        1px  0px 1px #fff, 0px  1px 1px #fff, -1px  0px 1px #fff, 0px -1px 1px #fff;
+}
+.param_life > .param_num:before {
+    display: block; position: absolute; top: 0; left: 0; width: 25px; content: '\02665';
+    text-align: center;
+}
+.param_smile > .param_num { color: #f69; }
+.param_pure > .param_num { color: #0c3; }
+.param_cool > .param_num { color: #009fff; }
+
+.param_plus {
+    display: inline-block; position: relative; width: 46%; height: 100%; top: 0;
+    margin: 0; padding: 0; padding-left: 2px; vertical-align: top;
+    color: #e52f12; font-size: 15px; line-height: 30px; font-weight: normal; text-align: center;
+    white-space: nowrap; cursor: default; user-select: none; -ms-user-select: none;
+}
+.param_plus:before { content: '+'; }
+
+.param_num:not(:last-child) {
+    display: inline-block; position: relative; width: 54%; vertical-align: top; text-align: right;
+}
+
+
+/* Guest Member
+====================================================================== */
+.deck_frame > .guest_member {
+    display: flex; position: relative; width: 100%; padding: 0px 6px 4px; white-space: nowrap;
+    flex-direction: row;
+}
+.deck_frame > .guest_member > * { display: inline-block; position: relative; vertical-align: top; }
+.guest_member > .member_block { top: 0; flex: 1; }
+.guest_member > .center_skill { top: 0; bottom: 0; margin-left: 0; margin-right: 0; white-space: normal; }
+.guest_member > .member_block > .member_icon:after { display: none; }
+.deck_frame > .guest_member .center_skill > .center_skill_name:before { content: 'ゲスト センタースキル'; }
+
+
+/* Deck Menu
+====================================================================== */
+.deck_menu {
+    display: block; position: relative; width: 100%; margin: 10px 0 30px; padding: 12px 4px;
+    background-color: rgba(255,255,255,0.6); border-radius: 4px; text-align: center;
+}
+.deck_menu > button { display: inline-block; margin: 0 6px; }
+
+
+/* Live Song Frame
+====================================================================== */
+.livesong_frame {
+    display: block; position: relative; width: 100%; margin: 6px 0 14px; padding: 6px 2px;
+    background-color: #fff; border: 2px solid #f69; border-radius: 12px;
+}
+.livesong_frame > h1 { position: absolute; top: 4px; left: 0; text-align: left; }
+
+.livesong_frame > .livesong_block {
+    display: flex; position: relative; width: 100%; padding: 0px 6px 4px; white-space: nowrap;
+    flex-direction: row;
+}
+
+
+
+/* ----------------------------------------------------------------------
+*  Card Detail Design
+---------------------------------------------------------------------- */
+
+/* Detail Dialog
+====================================================================== */
+.dialog#card_detail_dlg { width: 800px; height: 700px; max-height: 90vh; padding-top: 40px; }
+
+.dialog#card_detail_dlg .detail_bg {
+    display: table; position: relative; width: 100%; min-height: 100%; overflow-x: hidden; 
+    margin: 0; padding: 10px 4px; border-radius: 4px;
+}
+.detail_bg.smile { background-color: #ffd5e9; }
+.detail_bg.pure { background-color: #dce9d7; }
+.detail_bg.cool { background-color: #ccdcf4; }
+
+
+/* Image Block
+====================================================================== */
+.detail_bg > .image_block {
+    display: table-cell; position: relative; width: 30%; max-width: 200px;
+    padding: 0 8px; vertical-align: top;
+}
+.detail_bg > .image_block > img.card_image {
+    display: block; position: relative; width: 100%; height: auto;
+    border: 4px solid #fff; border-radius: 6px; box-shadow: 0 0 0 2px #ffffff;
+    pointer-events: none;
+}
+.detail_bg.smile img.card_image { border-color: #ff679a; }
+.detail_bg.pure img.card_image { border-color: #02bd34; }
+.detail_bg.cool img.card_image { border-color: #029aee; }
+
+.detail_bg > .image_block > .idolized_switch {
+    display: block; position: relative; width: 100%; margin-top: 6px; padding: 0 6px;
+    text-align: center;
+}
+
+.idolized_switch > .switch_button > label { min-width: 50%; }
+
+
+/* Detail Block
+====================================================================== */
+.detail_bg > .detail_block {
+    display: table-cell; position: relative; width: auto; padding: 0 6px; vertical-align: top;
+}
+
+.detail_block > .detail_frame {
+    display: block; position: relative; width: 100%; overflow: hidden; padding: 0 6px;
+    border-radius: 6px; box-shadow: 0 0 0 2px #ffffff; background-color: #fff;
+}
+.detail_block > .detail_frame + .detail_frame { margin-top: 12px; }
+
+.detail_frame > .detail_title {
+    display: block; position: relative; left: -6px; width: calc(100% + 12px); overflow: hidden; margin: 0; padding: 6px;
+    color: #fff; font-size: 20px; line-height: 20px; font-weight: bold;
+    white-space: nowrap; cursor: default; user-select: none; -ms-user-select: none;
+}
+.detail_bg.smile .detail_frame > .detail_title { background-color: #f276b0; }
+.detail_bg.pure .detail_frame > .detail_title { background-color: #08c32e; }
+.detail_bg.cool .detail_frame > .detail_title { background-color: #029aee; }
+
+.detail_frame > .card_detail {
+    display: block; position: relative; width: 100%; overflow: hidden; padding: 6px 4px;
+}
+.detail_frame > .card_detail + .card_detail {
+    padding-top: 11px;
+    background-image: -moz-linear-gradient(left, #ccc, #ccc 3px, transparent 3px, transparent 7px);
+    background-image: -webkit-linear-gradient(left, #ccc, #ccc 3px, transparent 3px, transparent 7px);
+    background-image: linear-gradient(to right, #ccc, #ccc 3px, transparent 3px, transparent 7px);
+    background-size: 7px 3px; background-position: left top; background-repeat: repeat-x;
+}
+
+
+.detail_frame > .card_detail.text {
+    color: #000; font-size: 24px; line-height: 24px; font-weight: normal;
+    white-space: nowrap; cursor: default; user-select: none; -ms-user-select: none;
+}
+
+.card_detail.nowrap { display: flex; }
+.card_detail.nowrap > .detail_desc { flex: 1; }
+.card_detail.nowrap > .detail_desc > * { display: inline-block; vertical-align: top; }
+
+.card_detail > .detail_name {
+    display: block; position: relative; padding: 2px 0; padding-right: 6px; overflow: hidden;
+    color: #527b81; font-size: 18px; line-height: 20px; font-weight: bold; vertical-align: middle;
+    white-space: nowrap; cursor: default; user-select: none; -ms-user-select: none;
+}
+.card_detail > .detail_name:after { content: ':'; }
+
+.detail_frame > .card_detail > .detail_desc, .detail_frame > .card_detail .detail_text {
+    position: relative; padding: 2px 0; overflow: hidden;
+    color: #000; font-size: 20px; line-height: 20px; font-weight: normal; vertical-align: middle;
+    white-space: normal; cursor: default; user-select: none; -ms-user-select: none;
+}
+.detail_frame > .card_detail > .detail_desc.small, .detail_frame > .card_detail .detail_text.small {
+    font-size: 18px; line-height: 18px;
+}
+
+.detail_frame > .card_detail > .detail_desc > *:not(:last-child) { margin-right: 8px; margin-bottom: 6px; }
+.detail_frame > .card_detail > .detail_desc > .min_max_button { position: relative; }
+.detail_frame > .card_detail > .detail_desc > .min_max_button > button {
+    display: inline-block; position: relative; margin-right: 8px;
+}
+
+.card_detail > .param_life { flex: 1; }
+.card_detail > .param_smile, .card_detail > .param_pure, .card_detail > .param_cool { flex: 1.2; }
+
+
+
+/* ----------------------------------------------------------------------
+*  Card Viewer Design
+---------------------------------------------------------------------- */
+
+/* Filter Menu
+====================================================================== */
+.filter_menu {
+    display: block; position: relative; width: 100%; margin: 4px 0 12px; padding: 6px 2px; text-align: right;
+}
+
+.filter_menu > button { display: inline-block; vertical-align: top; margin-left: 8px; margin-right: 8px; }
+.filter_menu > button#list_filter { width: 160px; }
+.filter_menu > button#list_order { width: 100px; }
+
+#last_update {
+    display: block; position: relative; width: 100%; margin: 0; padding: 0 14px;
+    color: #f69; font-size: 18px; font-weight: bold; text-align: right;
+    cursor: default; user-select: none; -ms-user-select: none;
+    text-shadow: 
+      2px  2px 1px #fff, -2px  2px 1px #fff, 2px -2px 1px #fff, -2px -2px 1px #fff,
+      2px  0px 1px #fff, 0px  2px 1px #fff, -2px  0px 1px #fff, 0px -2px 1px #fff;
+}
+
+
+/* Card List
+====================================================================== */
+.card_list { display: block; position: relative; width: 100%; margin: 4px 0 14px; padding: 0 8px; }
+
+.card_list > .card_item {
+    display: flex; position: relative; width: 100%; margin: 10px 0; padding: 6px 6px;
+    background-color: #fff; border: 2px solid #f69; border-radius: 12px;
+}
+
+.card_list > .card_item > .member_icon {
+    display: block; position: relative; width: 100px; max-width: 100%; margin: 0; padding: 0;
+}
+
+.card_list > .card_item > .card_data {
+    display: block; position: relative; margin: 0; padding: 0; padding-left: 8px; flex: 1;
+}
+
+.card_list > .card_item > .card_data > * {
+    display: block; position: relative; width: 100%; overflow: hidden;
+}
+
+.card_list .card_data > .card_name {
+    margin: 0; padding: 2px 0 11px;
+    color: #f69; font-size: 20px; line-height: 20px; font-weight: bold;
+    white-space: nowrap; text-overflow: ellipsis; cursor: default; user-select: none; -ms-user-select: none;
+    background-image: -moz-linear-gradient(left, #ccc, #ccc 3px, transparent 3px, transparent 7px);
+    background-image: -webkit-linear-gradient(left, #ccc, #ccc 3px, transparent 3px, transparent 7px);
+    background-image: linear-gradient(to right, #ccc, #ccc 3px, transparent 3px, transparent 7px);
+    background-size: 7px 3px; background-position: left bottom; background-repeat: repeat-x;
+}
+
+.card_list .card_data > .card_param { display: flex; }
+.card_list .card_param > .param_life { flex: 1; max-width: 120px;}
+.card_list .card_param > .param_smile, .card_list .card_param > .param_pure,
+.card_list .card_param > .param_cool { flex: 1.2; max-width: 150px; }
+
+.card_list .card_data > .card_detail {
+    display: flex; position: relative; width: 100%; overflow: hidden; padding: 4px 0;
+}
+.card_list .card_data > .card_detail > .detail_desc {
+    display: block; position: relative; padding: 2px 0; overflow: hidden;
+    color: #000; font-size: 18px; line-height: 18px; font-weight: normal; vertical-align: middle;
+    white-space: normal; cursor: default; user-select: none; -ms-user-select: none;
+}
+
+
+/* FIlter Dialog
+====================================================================== */
+.dialog#card_search_dlg { width: 800px; height: 600px; }
+
+.dialog#card_search_dlg .content_block {
+    background: none; border: none; border-radius: 0; box-shadow: none;
+}
+.dialog#card_search_dlg input#skillname_1 { width: 90%; }
+.dialog#card_search_dlg input#min_trigger, .dialog#card_search_dlg input#max_trigger {
+  min-width: auto; width: 30%;
 }
