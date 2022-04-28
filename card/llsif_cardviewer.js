@@ -5,7 +5,7 @@
 *  Description: LLSIF Card Viewer Module
 *  Author: chieri0611
 *  Create: 2022/04/01
-*  Update: 2022/04/03
+*  Update: 2022/04/29
 *
 ********************************************************************** */
 
@@ -932,7 +932,7 @@ function searchCardList(param) {
 
   if(p_trigmin && p_trigmax) {
     const min_trig = Math.min(param.min_trigger, param.max_trigger);
-    const max_trig = Math.min(param.min_trigger, param.max_trigger);
+    const max_trig = Math.max(param.min_trigger, param.max_trigger);
     param.min_trigger = min_trig; param.max_trigger = max_trig;
   }
 
