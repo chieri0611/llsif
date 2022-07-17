@@ -5,7 +5,7 @@
 *  Description: LLSIF Card Viewer Module
 *  Author: chieri0611
 *  Create: 2022/04/01
-*  Update: 2022/04/29
+*  Update: 2022/07/17
 *
 ********************************************************************** */
 
@@ -26,6 +26,8 @@
 *    [-] resetGuestMember
 *    [-] changePosition
 *    [-] setCenterSkillName
+*    [-] setIdolSkill
+*    [-] resetIdolSkill
 *    [-] calcDeckParameter
 *
 *  Conversion
@@ -37,12 +39,11 @@
 *    [-] toSkillDesc
 *    [-] toCenterSkillName
 *    [-] toCenterSkillDesc
+*    [-] toIdolSkillDesc
 *
 *  Card Detail
 *    [-] getCardParameter
 *    [-] showCardDetail
-*
-*  Card Search
 *    [-] viewCardList
 *    [-] searchCardList
 *    [-] sortCardList
@@ -50,21 +51,22 @@
 ====================================================================== */
 
 
-  var DB_SERVER, ASSET_PATH;
+  var CARD_DB_SERVER, CARD_ASSET_PATH;
   if(location.hostname == 'localhost') {
-    DB_SERVER = "/LLSIF_DATA/"; ASSET_PATH = '/Github/llsif/assets/';
+    CARD_DB_SERVER = "/LLSIF_DATA/"; CARD_ASSET_PATH = '/Github/llsif/assets/';
   } else {
-    DB_SERVER = "https://llsif.gamedbs.jp/images/"; ASSET_PATH = '/llsif/assets/';
+    CARD_DB_SERVER = "https://llsif.gamedbs.jp/images/"; CARD_ASSET_PATH = '/llsif/assets/';
   }
 
   const VIEW_PAGEITEM = 20;
   const SORT_CRITERIA = { ID: 1, SMILE: 2, PURE: 3, COOL: 4, TRIGGER: 5, CHANCE: 6, DURATION: 7, VALUE: 8, VALUE_MAX: 9 };
+  const SORT_CRITERIA_SIS = { ID: 1 };
 
-  const MAX_UNIT = 9;
-  const MAX_SKILL = 8;
+  const MAX_MEMBER = 9, MAX_SKILL = 8, CENTER_POSITION = 5;
+  const MAX_DECK = 5;
 
   const RARITY = { N: 1, R: 2, SR: 3, UR: 4, SSR: 5 };
-  const ATTR = { SMILE: 1, PURE: 2, COOL: 3 };
+  const ATTR = { SMILE: 1, PURE: 2, COOL: 3, ALL: 5 };
   const GROUP = { MUSE: 1, AQOURS: 2, NIJIGAKU: 3, LIELLA: 4 };
   const SUBUNIT = { PRINTEMPS: 1, LILYWHITE: 2, BIBI: 3, CYARON: 4, AZELEA: 5, GUILTYKISS: 6 };
   const TENNYUSEI = [11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,41,42,43,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68];
@@ -73,13 +75,15 @@
   const TRIGGER = { TIMER: 1, ICON: 3, COMBO: 4, SCORE: 5, PERFECT: 6, STARICON: 12, CHAIN: 100 };
   const LEADER_SKILL = { NONE: 0, SMILE: 1, PURE: 2, COOL: 3, PUREPRINCESS: 112, COOLPRINCESS: 113, SMILEANGEL: 121, COOLANGEL: 123, SMILEEMPRESS: 131, PUREEMPRESS: 132 };
 
+  const IDOL_SKILL = { NONE: 0, VALUE: 1, PERCENT: 2, TEAM: 3, CHARM: 4, HEAL: 5, TRICK: 6, NONET: 7 };
+
   const ATTR_NAME = { "1": "スマイル", "2": "ピュア", "3": "クール" };
   const GROUP_NAME = { "1": "μ's", "2": "Aqours", "3": "虹ヶ咲", "4": "Liella!" };
   const SUBUNIT_NAME = { "1": "Printemps", "2": "lily white", "3": "BiBi", "4": "CYaRon！", "5": "AZALEA", "6": "Guilty Kiss" };
   const SKILL_NAME = { "4": "判定強化(小)", "5": "判定強化(大)", "9": "体力回復", "11": "SCOREアップ", "2000": "特技発動率アップ", "2100": "特技リピート", "2201": "PERFECT SCOREアップ", "2300": "COMBO FEVER", "2400": "パラメータシンクロ", "2500": "特技レベルブースト", "2600": "パラメータアップ" };
 
   var param_diff, cards_data, members_data, idolskills_data, accessories_data;
-  var llsif, deckdata, carddata, guestdata;
+  var deckdata, carddata, guestdata;
 
 
 /* ----------------------------------------------------------------------
@@ -90,14 +94,19 @@
 ====================================================================== */
 function initCardViewer(success_func) {
   const dbdir = location.hostname == 'localhost' ? '/Github/llsif/db/' : '/llsif/db/';
-  var files = [dbdir + 'param_diff.json', dbdir + 'cards.json', dbdir + 'members.json', dbdir + 'idol_skill.json', dbdir + 'accessories.json'];
+  var files = ['param_diff.json', 'cards.json', 'cards_add.json', 'members.json', 'idol_skill.json', 'accessories.json'];
+  files = files.map(function(elem) { return dbdir + elem; });
 
   var urlquery = getURLQueryParam();
   var nocache = urlquery.hasOwnProperty('cache') ? urlquery.cache == '0' : false;
 
   loadAllFiles(files, nocache, function(response) {
-    param_diff = JSON.parse(response[0]); cards_data = JSON.parse(response[1]); members_data = JSON.parse(response[2]);
-    idolskills_data = JSON.parse(response[3]); accessories_data = JSON.parse(response[4]);
+    param_diff = JSON.parse(response[0]); cards_data = JSON.parse(response[1]);
+    var cards_add = JSON.parse(response[2]);
+    members_data = JSON.parse(response[3]); idolskills_data = JSON.parse(response[4]);
+    accessories_data = JSON.parse(response[5]);
+
+    cards_data.cards.concat(cards_add.cards);
     success_func();
   });
 }
@@ -108,30 +117,18 @@ function initCardViewer(success_func) {
 function loadDeck(decknumber) {
   if(!cards_data) return;
 
-  if(llsif == null) llsif = new LLSIF_ScoreCalc();
-
   //ユニット情報読込
   var _deck = localStorage.getItem('llsif_deck');
-  if(_deck == null) {
-    _deck = {
-      decks:[
-        {
-          number: 1,
-          deck: [
-            {lv:0,id:0,pos:1,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]},
-            {lv:0,id:0,pos:2,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]},
-            {lv:0,id:0,pos:3,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]},
-            {lv:0,id:0,pos:4,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]},
-            {lv:0,id:0,pos:5,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]},
-            {lv:0,id:0,pos:6,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]},
-            {lv:0,id:0,pos:7,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]},
-            {lv:0,id:0,pos:8,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]},
-            {lv:0,id:0,pos:9,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]}
-          ],
-          guest: 0
-        }
-      ]
-    };
+  if(_deck == null || _deck == '') {
+    _deck = { decks:[] };
+    for(var i = 1; i <= MAX_DECK; i++) {
+      var _deckdata = { number: i, deck: [], guest: {lv:0,id:0,i:false,b:0} }
+      for(var m = 1; m <= MAX_MEMBER; m++) {
+        var _member =  {lv:0,id:0,pos:m,i:false,b:0,sk:0,a_id:0,a_lv:0,sis:[]}
+        _deckdata.deck.push(_member);
+      }
+      _deck.decks.push(_deckdata);
+    }
     localStorage.setItem('llsif_deck', JSON.stringify(_deck));
     return;
   }
@@ -139,31 +136,31 @@ function loadDeck(decknumber) {
 
   _deck = _deck.decks.find(function(elem) { return elem.number == decknumber; });
   deckdata = _deck
-  carddata = new Array(llsif.MAX_UNIT); guestdata = 0;
+  carddata = new Array(MAX_MEMBER); guestdata = 0;
 }
 
 
 /* viewDeck
 ====================================================================== */
-function viewDeck(elem_deck, elem_guest) {
-  if(!deckdata) return;
+function viewDeck(llsif, elem_deck, elem_guest) {
+  if(!llsif || !deckdata) return;
 
   if(elem_deck) {
     deckdata.deck.forEach(function(mem_obj) {
       var mem_elem = elem_deck.querySelector('[data-position="' + mem_obj.pos + '"]');
       if(mem_obj.id != 0) {
-        setDeckMember(mem_obj, mem_elem);
+        setDeckMember(llsif, mem_obj, mem_elem);
       } else {
-        resetDeckMember(mem_obj.pos, mem_elem);
+        resetDeckMember(llsif, mem_obj.pos, mem_elem);
       }
     });
   }
 
   if(elem_guest) {
-    if(deckdata.guest != 0) {
-      setGuestMember(deckdata.guest, elem_guest);
+    if(deckdata.guest.id != 0) {
+      setGuestMember(llsif, deckdata.guest, elem_guest);
     } else {
-      resetGuestMember(elem_guest);
+      resetGuestMember(llsif, elem_guest);
     }
   }
 }
@@ -184,7 +181,7 @@ function saveDeck(decknumber) {
 
 /* resetDeck
 ====================================================================== */
-function resetDeck(decknumber) {
+function resetDeck(llsif, decknumber) {
   var _decks = JSON.parse(localStorage.getItem('llsif_deck'));
 
   deckdata.deck = deckdata.deck.map(function(elem) {
@@ -192,8 +189,10 @@ function resetDeck(decknumber) {
     elem.sk = 0; elem.a_id = 0; elem.a_lv = 0; elem.sis = [];
     llsif.deckMember[elem.pos - 1].reset(); return elem;
   });
-  deckdata.guest = 0;
-  carddata = new Array(llsif.MAX_UNIT); guestdata = 0;
+  deckdata.guest.lv = 0; deckdata.guest.id = 0;
+  deckdata.guest.i = false; deckdata.guest.b = 0;
+
+  carddata = new Array(MAX_MEMBER); guestdata = 0;
 
   _decks.decks.forEach(function(elem, idx) {
     if(_decks.decks[idx].number == decknumber) _decks.decks[idx] = deckdata;
@@ -205,7 +204,7 @@ function resetDeck(decknumber) {
 
 /* setDeckMember
 ====================================================================== */
-function setDeckMember(mem_obj, mem_elem) {
+function setDeckMember(llsif, mem_obj, mem_elem) {
   var icon_elem = mem_elem.querySelector('.member_img');
   var frame_elem = mem_elem.querySelector('.member_frame');
   var lv_elem = mem_elem.querySelector('.member_level');
@@ -218,7 +217,11 @@ function setDeckMember(mem_obj, mem_elem) {
   var member = llsif.deckMember[mem_obj.pos - 1];
   member.unit_id = mem_obj.id;
   member.level = mem_obj.lv; member.attr = card.a; member.life = card.h + diff.h;
-  member.smile = card.s + diff.s; member.pure = card.p + diff.p; member.cool = card.c + diff.c;
+  if(diff.hasOwnProperty('d')) {
+    member.smile = card.s + diff.d; member.pure = card.p + diff.d; member.cool = card.c + diff.d;
+  } else {
+    member.smile = card.s + diff.s; member.pure = card.p + diff.p; member.cool = card.c + diff.c;
+  }
   member.bond = mem_obj.b; member.idolized = mem_obj.i;
   member.member_id = card.u;
 
@@ -260,14 +263,14 @@ function setDeckMember(mem_obj, mem_elem) {
   lv_elem.textContent = mem_obj.lv;
   icon_elem.src = toIconAssetPath(card, mem_obj.i);
   frame_elem.src = toIconFrameAssetPath(card);
-  toggleClass(mem_elem, 'idol_skill', mem_obj.sis.length > 0);
-  toggleClass(mem_elem, 'blank', false);
+  mem_elem.dataset.idol_skill = mem_obj.sis.length > 0;
+  mem_elem.dataset.unitnumber = mem_obj.id;
 }
 
 
 /* resetDeckMember
 ====================================================================== */
-function resetDeckMember(mem_pos, mem_elem) {
+function resetDeckMember(llsif, mem_pos, mem_elem) {
   llsif.deckMember[mem_pos - 1].reset();
   carddata[mem_pos - 1] = null;
 
@@ -276,23 +279,23 @@ function resetDeckMember(mem_pos, mem_elem) {
   var lv_elem = mem_elem.querySelector('.member_level');
 
   lv_elem.textContent = '';
-  icon_elem.src = ASSET_PATH + 'member_blank.png';
+  icon_elem.src = CARD_ASSET_PATH + 'member_blank.png';
   frame_elem.src = '';
-  toggleClass(mem_elem, 'idol_skill', false);
-  toggleClass(mem_elem, 'blank', true);
+  mem_elem.dataset.idol_skill = false;
+  mem_elem.dataset.unitnumber = 0;
 }
 
 
 /* setGuestMember
 ====================================================================== */
-function setGuestMember(mem_id, mem_elem) {
+function setGuestMember(llsif, mem_obj, mem_elem) {
   var icon_elem = mem_elem.querySelector('.member_img');
   var frame_elem = mem_elem.querySelector('.member_frame');
 
-  var card = cards_data.cards.find(function(elem) { return elem.i == mem_id; });
+  var card = cards_data.cards.find(function(elem) { return elem.i == mem_obj.id; });
 
   var member = llsif.guestMember;
-  member.unit_id = mem_id;
+  member.unit_id = mem_obj.id;
   if(card.l != 0) {
     member.center_skill.effect_type = card.l.t;
     member.center_skill.effect_value = Decimal.div(card.l.v, 100);
@@ -303,30 +306,29 @@ function setGuestMember(mem_id, mem_elem) {
   }
 
   guestdata = card;
-  icon_elem.src = toIconAssetPath(card, false);
+  icon_elem.src = toIconAssetPath(card, mem_obj.i);
   frame_elem.src = toIconFrameAssetPath(card);
-  toggleClass(mem_elem, 'blank', false);
+  mem_elem.dataset.unitnumber = mem_obj.id;
 }
 
 
 /* resetGuestMember
 ====================================================================== */
-function resetGuestMember(mem_elem) {
+function resetGuestMember(llsif, mem_elem) {
   llsif.guestMember.reset(); guestdata = 0;
 
   var icon_elem = mem_elem.querySelector('.member_img');
   var frame_elem = mem_elem.querySelector('.member_frame');
 
-  icon_elem.src = ASSET_PATH + 'member_blank.png';
+  icon_elem.src = CARD_ASSET_PATH + 'member_blank.png';
   frame_elem.src = '';
-  toggleClass(mem_elem, 'idol_skill', false);
-  toggleClass(mem_elem, 'blank', true);
+  mem_elem.dataset.unitnumber = 0;
 }
 
 
 /* changePosition
 ====================================================================== */
-function changePosition(from_pos, to_pos, elem_deck) {
+function changePosition(llsif, from_pos, to_pos, elem_deck) {
   llsif.deckMember[from_pos - 1].move(to_pos);
 
   var temp = deckdata.deck[to_pos - 1];
@@ -336,7 +338,7 @@ function changePosition(from_pos, to_pos, elem_deck) {
   var temp = carddata[to_pos - 1];
   carddata[to_pos - 1] = carddata[from_pos - 1]; carddata[from_pos - 1] = temp;
 
-  viewDeck(elem_deck);
+  viewDeck(llsif, elem_deck);
 }
 
 
@@ -351,23 +353,43 @@ function setCenterSkillName(obj, card) {
 }
 
 
+/* setIdolSkill
+====================================================================== */
+function setIdolSkill(llsif, mem_obj, mem_elem) {
+}
+
+
+/* resetIdolSkill
+====================================================================== */
+function resetIdolSkill(llsif, mem_pos, mem_elem) {
+}
+
+
 /* calcDeckParameter
 ====================================================================== */
-function calcDeckParameter(obj, guest, idol_skill) {
+function calcDeckParameter(llsif, obj, guest, idol_skill) {
   var life_elem1 = obj.querySelector('#deck_life');
-  var life_elem2 = obj.querySelector('#deck_life_plus');
+  var life_elem2 = obj.querySelector('#centerskill_life');
+  var life_elem3 = obj.querySelector('#idolskill_life');
   var smile_elem1 = obj.querySelector('#deck_smile');
-  var smile_elem2 = obj.querySelector('#deck_smile_plus');
+  var smile_elem2 = obj.querySelector('#centerskill_smile');
+  var smile_elem3 = obj.querySelector('#idolskill_smile');
   var pure_elem1 = obj.querySelector('#deck_pure');
-  var pure_elem2 = obj.querySelector('#deck_pure_plus');
+  var pure_elem2 = obj.querySelector('#centerskill_pure');
+  var pure_elem3 = obj.querySelector('#idolskill_pure');
   var cool_elem1 = obj.querySelector('#deck_cool');
-  var cool_elem2 = obj.querySelector('#deck_cool_plus');
+  var cool_elem2 = obj.querySelector('#centerskill_cool');
+  var cool_elem3 = obj.querySelector('#idolskill_cool');
 
   var param = llsif.deckParameter(guest, idol_skill);
   life_elem1.textContent = sumArray(param.life); life_elem2.textContent = 0;
   smile_elem1.textContent = sumArray(param.smile); smile_elem2.textContent = sumArray(param.smile_center_skill);
   pure_elem1.textContent = sumArray(param.pure); pure_elem2.textContent = sumArray(param.pure_center_skill);
   cool_elem1.textContent = sumArray(param.cool); cool_elem2.textContent = sumArray(param.cool_center_skill);
+  if(life_elem3) life_elem3.textContent = 0;
+  if(smile_elem3) smile_elem3.textContent = sumArray(param.smile_idol_skill);
+  if(pure_elem3) pure_elem3.textContent = sumArray(param.pure_idol_skill);
+  if(cool_elem3) cool_elem3.textContent = sumArray(param.cool_idol_skill);
 }
 
 
@@ -382,15 +404,15 @@ function toIconAssetPath(card, idolized) {
   const idol_type = card.o || idolized ? 'rankup_icon' : 'normal_icon';
   if(location.hostname == 'localhost') {
     switch(card.d[0]) {
-      case 1: return DB_SERVER + 'assets/image/units/u_' + idol_type + '_' + card.d[1] + '.png'; break;
-      case 2: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/u_' + card.d[1] + '_' + idol_type + '.png'; break;
-      case 3: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/u_' + idol_type + '_' + card.d[1] + '.png'; break;
+      case 1: return CARD_DB_SERVER + 'assets/image/units/u_' + idol_type + '_' + card.d[1] + '.png'; break;
+      case 2: return CARD_DB_SERVER + 'assets/image/unit/' + card.d[1] + '/u_' + card.d[1] + '_' + idol_type + '.png'; break;
+      case 3: return CARD_DB_SERVER + 'assets/image/unit/' + card.d[1] + '/u_' + idol_type + '_' + card.d[1] + '.png'; break;
     }
   } else {
     switch(card.d[0]) {
-      case 1: return DB_SERVER + 'assets/image/units/tx_u_' + idol_type + '_' + card.d[1] + '.texb.png'; break;
-      case 2: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/tx_u_' + card.d[1] + '_' + idol_type + '.texb.png'; break;
-      case 3: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/tx_u_' + idol_type + '_' + card.d[1] + '.texb.png'; break;
+      case 1: return CARD_DB_SERVER + 'assets/image/units/tx_u_' + idol_type + '_' + card.d[1] + '.texb.png'; break;
+      case 2: return CARD_DB_SERVER + 'assets/image/unit/' + card.d[1] + '/tx_u_' + card.d[1] + '_' + idol_type + '.texb.png'; break;
+      case 3: return CARD_DB_SERVER + 'assets/image/unit/' + card.d[1] + '/tx_u_' + idol_type + '_' + card.d[1] + '.texb.png'; break;
     }
   }
 }
@@ -400,9 +422,19 @@ function toIconAssetPath(card, idolized) {
 function toIconFrameAssetPath(card) {
   var frame_asset = '';
   switch(card.r) {
-    case RARITY.UR: frame_asset = choose(card.a, 'ur_smile.png', 'ur_pure.png', 'ur_cool.png'); break;
+    case RARITY.N:   frame_asset = 'n'; break;
+    case RARITY.R:   frame_asset = 'r'; break;
+    case RARITY.SR:  frame_asset = 'sr'; break;
+    case RARITY.SSR: frame_asset = 'ssr'; break;
+    case RARITY.UR:  frame_asset = 'ur'; break;
   }
-  return ASSET_PATH + frame_asset;
+  switch(card.a) {
+    case ATTR.SMILE: frame_asset += '_smile.png'; break;
+    case ATTR.PURE:  frame_asset += '_pure.png'; break;
+    case ATTR.COOL:  frame_asset += '_cool.png'; break;
+    case ATTR.ALL:   frame_asset += '_all.png'; break;
+  }
+  return CARD_ASSET_PATH + frame_asset;
 }
 
 /* toCardAssetPath
@@ -411,13 +443,13 @@ function toCardAssetPath(card, idolized) {
   if(location.hostname == 'localhost') {
     const idol_type = card.o || idolized ? 'b_rankup' : 'b_normal';
     switch(card.d[0]) {
-      case 1: return DB_SERVER + 'assets/image/units/' + idol_type + '_' + card.d[1] + '.png'; break;
-      case 2: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/' + card.d[1] + '_' + idol_type + '.png'; break;
-      case 3: return DB_SERVER + 'assets/image/unit/' + card.d[1] + '/' + idol_type + '_' + card.d[1] + '.png'; break;
+      case 1: return CARD_DB_SERVER + 'assets/image/units/' + idol_type + '_' + card.d[1] + '.png'; break;
+      case 2: return CARD_DB_SERVER + 'assets/image/unit/' + card.d[1] + '/' + card.d[1] + '_' + idol_type + '.png'; break;
+      case 3: return CARD_DB_SERVER + 'assets/image/unit/' + card.d[1] + '/' + idol_type + '_' + card.d[1] + '.png'; break;
     }
   } else {
     const idol_type = card.o || idolized ? 'r' : 'n';
-    return DB_SERVER + 'gcard/' + card.i + idol_type + '.jpg';
+    return CARD_DB_SERVER + 'gcard/' + card.i + idol_type + '.jpg';
   }
 }
 
@@ -444,7 +476,7 @@ function toSkillType(card) {
 function toSkillDesc(card, skill_level) {
   if(!card) return '';
   if(card.y == 0) return '無し';
-  if(skill_level == 'max') skill_level = card.k.length;
+  if(skill_level == -1) skill_level = card.k.length;
   if(skill_level > card.k.length || skill_level < 1) return '';
 
   var sk = card.k[skill_level - 1];
@@ -495,7 +527,7 @@ function toSkillDesc(card, skill_level) {
     case SKILL.SKILLBOOST:
       skill_desc = sk_trigger + sk_chance + '次に発動する特技のLvが' + sk.v + 'アップする'; break;
     case SKILL.PARAMUP:
-      skill_desc = sk_trigger + sk_chance + sk.s + '秒間' + sk_target + 'の属性Pが' + sk.v + '%UPする'; break;
+      skill_desc = sk_trigger + sk_chance + sk.s + '秒間' + sk_target + 'の属性Pが' + Decimal.times(sk.v, 100) + '%UPする'; break;
     default: return '無し';
   }
 
@@ -560,6 +592,48 @@ function toCenterSkillDesc(card) {
 }
 
 
+/* toIdolSkillDesc
+====================================================================== */
+function toIdolSkillDesc(sis) {
+  if(!members_data) return '';
+  const e_attr = ATTR_NAME[sis.a] + 'Ｐ';
+  var e_target = '装着した部員の';
+  if(sis.u != 0) {
+    var mem_data = members_data.members.find(function(elem) { return elem.u == sis.u; });
+    e_target = mem_data.s + 'のみが装着でき、装着した' + mem_data.s + 'の';
+  }
+
+  switch(sis.t) {
+    case IDOL_SKILL.VALUE:
+      return e_target + e_attr + 'が' + sis.v + 'upする'; break;
+    case IDOL_SKILL.PERCENT:
+      return e_target + e_attr + 'が' + Decimal.times(sis.v, 100) + '%upする'; break;
+    case IDOL_SKILL.TEAM:
+      return 'ユニットに参加している部員全員の' + e_attr + 'が' +Decimal.times( sis.v, 100) + '%upする'; break;
+    case IDOL_SKILL.CHARM:
+      return '装着した部員のSCOREアップ特技の効果量が' + sis.v + '倍になる'; break;
+    case IDOL_SKILL.HEAL:
+      return '体力MAX時、装着した部員の体力回復特技が発動すると、スコアが回復量×' + sis.v + '増える'; break;
+    case IDOL_SKILL.TRICK:
+      return '判定強化特技の発動中、装着した部員の' + e_attr + 'が' + sis.v + '倍になる'; break;
+    case IDOL_SKILL.NONET:
+      var e_group;
+      switch(sis.m) {
+        case GROUP.MUSE:
+        case GROUP.AQOURS:
+          e_group = 'ユニットに' + GROUP_NAME[sis.m] + 'メンバー全員参加時'; break;
+        case GROUP.NIJIGAKU:
+          e_group = 'ユニットに異なる' + GROUP_NAME[sis.m] + 'メンバー9人が参加時'; break;
+        case GROUP.LIELLA:
+          e_group = 'ユニット9人が' + GROUP_NAME[sis.m] + 'メンバーかつ全員参加時'; break;
+        default: return '';
+      }
+      return e_group + '、部員全員の' + e_attr + 'が' + Decimal.times(sis.v, 100) + '%upする'; break;
+    default: return '';
+  }
+}
+
+
 
 /* ----------------------------------------------------------------------
 *  Card Detail
@@ -567,13 +641,17 @@ function toCenterSkillDesc(card) {
 
 /* getCardParameter
 ====================================================================== */
-function getCardParameter(card, level, bond) {
-  var diff = param_diff.pattern.find(function(elem) { return elem.i == card.v; });
-  diff = diff.p.find(function(elem) { return elem.l == level; });
+function getCardParameter(card, level, bond, diff_pattern) {
+  if(!diff_pattern) diff_pattern = param_diff.pattern.find(function(elem) { return elem.i == card.v; });
+  var diff = diff_pattern.p.find(function(elem) { return elem.l == level; });
 
   var param = new Object;
   param.life = card.h + diff.h;
-  param.smile = card.s + diff.s; param.pure = card.p + diff.p; param.cool = card.c + diff.c;
+  if(diff.hasOwnProperty('d')) {
+    param.smile = card.s + diff.d; param.pure = card.p + diff.d; param.cool = card.c + diff.d;
+  } else {
+    param.smile = card.s + diff.s; param.pure = card.p + diff.p; param.cool = card.c + diff.c;
+  }
   switch(card.a) {
     case ATTR.SMILE: param.smile += bond; break;
     case ATTR.PURE:  param.pure += bond; break;
@@ -650,10 +728,10 @@ function showCardDetail(card, deckmem, getparam, update_func) {
         '<div class="card_detail nowrap">' +
           '<div class="detail_name">特技</div><div id="data_skilltype" class="detail_desc"></div>' +
         '</div>' +
-        '<div class="card_detail nowrap">' +
+        '<div class="card_detail nowrap" id="detail_skillname">' +
           '<div class="detail_name">特技名</div><div id="data_skillname" class="detail_desc"></div>' +
         '</div>' +
-        '<div class="card_detail nowrap">' +
+        '<div class="card_detail nowrap" id="detail_skilllevel">' +
           '<div class="detail_name">特技Lv</div>' +
           '<div class="detail_desc">' +
             '<div class="spin_box">' +
@@ -683,6 +761,8 @@ function showCardDetail(card, deckmem, getparam, update_func) {
 
   if(deckmem == null) getparam = false;
   var diff = param_diff.pattern.find(function(elem) { return elem.i == card.v; });
+  if(!diff) diff = param_diff.pattern.find(function(elem) { return elem.i == 0; });
+
   var level_max, level_maxup, bond_max; 
   if(getparam) {
     level_max = card.o || deckmem.i ? diff.a : diff.b;
@@ -693,9 +773,9 @@ function showCardDetail(card, deckmem, getparam, update_func) {
     level_maxup = card.o ? diff.p[diff.p.length - 1].l : diff.b;
     bond_max = card.o ? diff.o : diff.l;
   }
-  const sklevel_max = card.k[card.k.length - 1].l;
+  const sklevel_max = card.y != 0 ? card.k[card.k.length - 1].l : 0;
   const level = getparam ? deckmem.lv : 1, bond = getparam ? deckmem.b : 0;
-  var param = getCardParameter(card, level, bond);
+  var param = getCardParameter(card, level, bond, diff);
 
 
   function change_cardidolized(radio) {
@@ -727,7 +807,7 @@ function showCardDetail(card, deckmem, getparam, update_func) {
   function change_card_param() {
     const new_level = parseFloat(document.getElementById('data_level').value);
     const new_bond = parseFloat(document.getElementById('data_bond').value);
-    const new_param = getCardParameter(card, new_level, new_bond);
+    const new_param = getCardParameter(card, new_level, new_bond, diff);
     document.getElementById('data_life').textContent = new_param.life;
     document.getElementById('data_smile').textContent = new_param.smile;
     document.getElementById('data_pure').textContent = new_param.pure;
@@ -736,14 +816,14 @@ function showCardDetail(card, deckmem, getparam, update_func) {
 
   function change_minvalue(elemid) {
     var input = document.getElementById(elemid); input.value = input.min; input.onchange();
-    input.parentNode.querySelector('.spindown_button').disabled = true;
-    input.parentNode.querySelector('.spinup_button').disabled = false;
+    input.parentNode.querySelector('.spindown_button').disabled = input.value == input.min;
+    input.parentNode.querySelector('.spinup_button').disabled = input.value == input.max;
   }
 
   function change_maxvalue(elemid) {
     var input = document.getElementById(elemid); input.value = input.max; input.onchange();
-    input.parentNode.querySelector('.spindown_button').disabled = false;
-    input.parentNode.querySelector('.spinup_button').disabled = true;
+    input.parentNode.querySelector('.spindown_button').disabled = input.value == input.min;
+    input.parentNode.querySelector('.spinup_button').disabled = input.value == input.max;
   }
 
   function change_maxlevel() {
@@ -754,7 +834,7 @@ function showCardDetail(card, deckmem, getparam, update_func) {
       input.value = input.max;
     }
     input.onchange();
-    input.parentNode.querySelector('.spindown_button').disabled = false;
+    input.parentNode.querySelector('.spindown_button').disabled = input.value == input.min;
     input.parentNode.querySelector('.spinup_button').disabled = input.value == input.max;
   }
 
@@ -762,7 +842,7 @@ function showCardDetail(card, deckmem, getparam, update_func) {
     var input = document.getElementById('data_skilllevel');
     input.value = parseFloat(input.value) >= MAX_SKILL ? input.max : MAX_SKILL;
     input.onchange();
-    input.parentNode.querySelector('.spindown_button').disabled = false;
+    input.parentNode.querySelector('.spindown_button').disabled = input.value == input.min;
     input.parentNode.querySelector('.spinup_button').disabled = input.value == input.max;
   }
 
@@ -776,8 +856,14 @@ function showCardDetail(card, deckmem, getparam, update_func) {
 
     if(new_sklevel > MAX_SKILL) return;
 
-    deckmem.lv = new_level; deckmem.i = new_idolized; deckmem.b = new_bond; deckmem.sk = new_sklevel; 
-    if(deckmem.id != card.i) { deckmem.id = card.i; deckmem.a_id = 0; deckmem.a_lv = 0; deckmem.sis = []; }
+    deckmem.lv = new_level; deckmem.i = new_idolized; deckmem.b = new_bond;
+    if(deckmem.hasOwnProperty('sk')) deckmem.sk = new_sklevel; 
+    if(deckmem.id != card.i) {
+      deckmem.id = card.i;
+      if(deckmem.hasOwnProperty('a_id')) deckmem.a_id = 0;
+      if(deckmem.hasOwnProperty('a_lv')) deckmem.a_lv = 0;
+      if(deckmem.hasOwnProperty('sis')) deckmem.sis = [];
+    }
     closeDialog('card_detail_dlg'); update_func();
   }
 
@@ -839,6 +925,11 @@ function showCardDetail(card, deckmem, getparam, update_func) {
   detail_elem.querySelector('#data_centerskill').textContent = toCenterSkillDesc(card);
   detail_elem.querySelector('#data_memberid').textContent = card.i;
 
+  if(card.y == 0) {
+    removeElement(detail_elem.querySelector('#detail_skillname'));
+    removeElement(detail_elem.querySelector('#detail_skilllevel'));
+  }
+
   var spinboxs = detail_elem.getElementsByClassName('spin_box');
   for(var i = 0; i < spinboxs.length; i++) {
     var spin_input = spinboxs[i].querySelector('.spin_value');
@@ -852,16 +943,11 @@ function showCardDetail(card, deckmem, getparam, update_func) {
 }
 
 
-
-/* ----------------------------------------------------------------------
-*  Card Search
----------------------------------------------------------------------- */
-
 /* viewCardList
 ====================================================================== */
-function viewCardList(listelem, cards, pagenum, skill_level, select_func) {
+function viewCardList(listelem, cards, pagenum, skill_level, viewidolized, select_func) {
   listelem.innerHTML = '';
-  items_elem = document.createDocumentFragment();
+  var items_elem = document.createDocumentFragment();
 
   const pageitem_min = (VIEW_PAGEITEM * (pagenum - 1)) + 1;
   const pageitem_max = Math.min(VIEW_PAGEITEM * pagenum, cards.length);
@@ -869,37 +955,43 @@ function viewCardList(listelem, cards, pagenum, skill_level, select_func) {
   for(var i = pageitem_min; i <= pageitem_max; i++) {
     var elem = cards[i - 1];
 
-    var item_elem = document.createElement('div'); item_elem.className = 'card_item';
+    var item_elem = document.createElement('div'); item_elem.className = 'item_data';
     item_elem.innerHTML = 
-      '<div class="member_icon" data-unitnumber="0">' +
-        '<img src="" class="member_img"><img src="" class="member_frame">' +
-      '</div>' +
-      '<div class="card_data">' +
-        '<div class="card_name"></div>' +
-        '<div class="card_detail nowrap">' +
-          '<div class="detail_name">特技</div><div class="detail_desc skill_type"></div>' +
+      '<div class="container">' +
+        '<div class="member_icon" data-unitnumber="0">' +
+          '<img src="" class="member_img"><img src="" class="member_frame">' +
         '</div>' +
-        '<div class="card_detail nowrap">' +
-          '<div class="detail_name">効果</div><div class="detail_desc skill_desc"></div>' +
-        '</div>' +
-        '<div class="card_param">' +
-          '<div class="param_life"><span class="param_num"></span></div>' +
-          '<div class="param_smile"><span class="param_num"></span></div>' +
-          '<div class="param_pure"><span class="param_num"></span></div>' +
-          '<div class="param_cool"><span class="param_num"></span></div>' +
+        '<div class="detail_block">' +
+          '<div class="item_name"></div>' +
+          '<div class="card_detail nowrap">' +
+            '<div class="detail_name">特技</div><div class="detail_desc skill_type"></div>' +
+          '</div>' +
+          '<div class="card_detail nowrap">' +
+            '<div class="detail_name">効果</div><div class="detail_desc skill_desc"></div>' +
+          '</div>' +
+          '<div class="card_param">' +
+            '<div class="param_life"><span class="param_num"></span></div>' +
+            '<div class="param_smile"><span class="param_num"></span></div>' +
+            '<div class="param_pure"><span class="param_num"></span></div>' +
+            '<div class="param_cool"><span class="param_num"></span></div>' +
+          '</div>' +
         '</div>' +
       '</div>';
 
     var cardrarity = '', cardeponym = '', membername = toMemberName(elem, false);
     switch(elem.r) {
+      case RARITY.N: cardrarity = 'N'; break;
+      case RARITY.R: cardrarity = 'R'; break;
+      case RARITY.SR: cardrarity = 'SR'; break;
+      case RARITY.SSR: cardrarity = 'SSR'; break;
       case RARITY.UR: cardrarity = 'UR'; break;
     }
     if(elem.n != '') cardeponym = '【' + elem.n + '】';
 
     item_elem.querySelector('.member_icon').dataset.unitnumber = elem.i;
-    item_elem.querySelector('.member_img').src = toIconAssetPath(elem, false);
+    item_elem.querySelector('.member_img').src = toIconAssetPath(elem, viewidolized);
     item_elem.querySelector('.member_frame').src = toIconFrameAssetPath(elem);
-    item_elem.querySelector('.card_name').textContent = cardrarity + cardeponym + membername;
+    item_elem.querySelector('.item_name').textContent = cardrarity + cardeponym + membername;
     item_elem.querySelector('.skill_type').textContent = toSkillType(elem);
     item_elem.querySelector('.skill_desc').textContent = toSkillDesc(elem, skill_level);
     item_elem.querySelector('.param_life > .param_num').textContent = elem.h;
@@ -913,7 +1005,12 @@ function viewCardList(listelem, cards, pagenum, skill_level, select_func) {
     });
     items_elem.appendChild(item_elem);
   }
-  listelem.appendChild(items_elem);
+
+  if(items_elem.childElementCount == 0) {
+    listelem.innerHTML = '<div class="nodata">該当する部員がいません</div>';
+  } else {
+    listelem.appendChild(items_elem);
+  }
 }
 
 
@@ -952,7 +1049,6 @@ function searchCardList(param) {
       if(card.y == 0) return false;
       if(card.k[MAX_SKILL - 1].t > param.max_trigger) return false;
     }
-
     return true;
   });
 
@@ -964,48 +1060,48 @@ function searchCardList(param) {
 ====================================================================== */
 function sortCardList(cards, criteria, sortorder) {
   cards.sort(function(a, b) {
-    var cardcomp;
+    var sortcomp;
     switch(criteria) {
-      case SORT_CRITERIA.ID: cardcomp = a.i - b.i; break;
-      case SORT_CRITERIA.SMILE: cardcomp = a.s - b.s; break;
-      case SORT_CRITERIA.PURE: cardcomp = a.p - b.p; break;
-      case SORT_CRITERIA.COOL: cardcomp = a.c - b.c; break;
+      case SORT_CRITERIA.ID: sortcomp = a.i - b.i; break;
+      case SORT_CRITERIA.SMILE: sortcomp = a.s - b.s; break;
+      case SORT_CRITERIA.PURE: sortcomp = a.p - b.p; break;
+      case SORT_CRITERIA.COOL: sortcomp = a.c - b.c; break;
 
       case SORT_CRITERIA.TRIGGER:
-        if(a.y == 0 && b.y != 0) { cardcomp = -1; break; }
-        if(a.y != 0 && b.y == 0) { cardcomp = 1; break; }
-        if(a.y == 0 && b.y == 0) { cardcomp = 0; break; }
-        if(a.t != b.t) { cardcomp = a.t - b.t; break; }
-        cardcomp = a.k[MAX_SKILL - 1].t - b.k[MAX_SKILL - 1].t; break;
+        if(a.y == 0 && b.y != 0) { sortcomp = -1; break; }
+        if(a.y != 0 && b.y == 0) { sortcomp = 1; break; }
+        if(a.y == 0 && b.y == 0) { sortcomp = 0; break; }
+        if(a.t != b.t) { sortcomp = a.t - b.t; break; }
+        sortcomp = a.k[MAX_SKILL - 1].t - b.k[MAX_SKILL - 1].t; break;
 
       case SORT_CRITERIA.CHANCE:
-        if(a.y == 0 && b.y != 0) { cardcomp = -1; break; }
-        if(a.y != 0 && b.y == 0) { cardcomp = 1; break; }
-        if(a.y == 0 && b.y == 0) { cardcomp = 0; break; }
-        cardcomp = a.k[MAX_SKILL - 1].r - b.k[MAX_SKILL - 1].r; break;
+        if(a.y == 0 && b.y != 0) { sortcomp = -1; break; }
+        if(a.y != 0 && b.y == 0) { sortcomp = 1; break; }
+        if(a.y == 0 && b.y == 0) { sortcomp = 0; break; }
+        sortcomp = a.k[MAX_SKILL - 1].r - b.k[MAX_SKILL - 1].r; break;
 
       case SORT_CRITERIA.DURATION:
-        if(a.y == 0 && b.y != 0) { cardcomp = -1; break; }
-        if(a.y != 0 && b.y == 0) { cardcomp = 1; break; }
-        if(a.y == 0 && b.y == 0) { cardcomp = 0; break; }
-        cardcomp = a.k[MAX_SKILL - 1].s - b.k[MAX_SKILL - 1].s; break;
+        if(a.y == 0 && b.y != 0) { sortcomp = -1; break; }
+        if(a.y != 0 && b.y == 0) { sortcomp = 1; break; }
+        if(a.y == 0 && b.y == 0) { sortcomp = 0; break; }
+        sortcomp = a.k[MAX_SKILL - 1].s - b.k[MAX_SKILL - 1].s; break;
 
       case SORT_CRITERIA.VALUE:
-        if(a.y == 0 && b.y != 0) { cardcomp = -1; break; }
-        if(a.y != 0 && b.y == 0) { cardcomp = 1; break; }
-        if(a.y == 0 && b.y == 0) { cardcomp = 0; break; }
-        cardcomp = a.k[MAX_SKILL - 1].v - b.k[MAX_SKILL - 1].v; break;
+        if(a.y == 0 && b.y != 0) { sortcomp = -1; break; }
+        if(a.y != 0 && b.y == 0) { sortcomp = 1; break; }
+        if(a.y == 0 && b.y == 0) { sortcomp = 0; break; }
+        sortcomp = a.k[MAX_SKILL - 1].v - b.k[MAX_SKILL - 1].v; break;
 
       case SORT_CRITERIA.VALUE_MAX:
-        if(a.y == 0 && b.y != 0) { cardcomp = -1; break; }
-        if(a.y != 0 && b.y == 0) { cardcomp = 1; break; }
-        if(a.y == 0 && b.y == 0) { cardcomp = 0; break; }
-        cardcomp = a.k[a.k.length - 1].v - b.k[b.k.length - 1].v; break;
+        if(a.y == 0 && b.y != 0) { sortcomp = -1; break; }
+        if(a.y != 0 && b.y == 0) { sortcomp = 1; break; }
+        if(a.y == 0 && b.y == 0) { sortcomp = 0; break; }
+        sortcomp = a.k[a.k.length - 1].v - b.k[b.k.length - 1].v; break;
 
       default: return 0; break;
     }
 
-    if(cardcomp == 0) cardcomp = a.i - b.i;
-    return sortorder ? -cardcomp : cardcomp;
+    if(sortcomp == 0) sortcomp = a.i - b.i;
+    return sortorder ? -sortcomp : sortcomp;
   });
 }
