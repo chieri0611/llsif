@@ -915,7 +915,7 @@ button.min_button:disabled, button.max_button:disabled { background-color: #bbb;
 /* Matrix Row, Column
 ====================================================================== */
 .matrix_table th, .matrix_table td:first-child { position: sticky; z-index: 1; }
-.matrix_table thead tr:first-child th:first-child { z-index: 2; left: 0; }
+.matrix_table thead tr:first-child th:first-child { z-index: 2; left: 0; white-space: nowrap; }
 .matrix_table td:first-child { left: 0; }
 .matrix_table th { top: 0; }
 .matrix_table th[colspan] { white-space: nowrap; }
@@ -948,7 +948,7 @@ button.min_button:disabled, button.max_button:disabled { background-color: #bbb;
 
 .matrix_table tbody tr td:first-child { vertical-align: middle; text-align: center; }
 .matrix_table td > .row_head {
-    display: inline-block; position: relative; width: 70px; margin: 0; padding: 0;
+    display: inline-block; position: relative; width: 74px; margin: 0; padding: 0;
     font-size: 14px; line-height: 16px; text-align: center; color: #333; font-weight: bold;
 }
 .matrix_table td > .row_head::first-line { font-size: 24px; line-height: 28px; }
