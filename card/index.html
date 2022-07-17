@@ -8,7 +8,7 @@
 <meta name="description" content="スクフェス用の検索ツール。特技やステータスなどから部員を検索したり詳細を確認できます。" />
 <meta name="keywords" content="スクフェス,部員一覧,部員検索,カード検索" />
 <meta name="author" content="chieri0611" />
-<!-- update: 2022-04-16 -->
+<!-- update: 2022-07-17 -->
 
 <meta name="og:type" content="article" />
 <meta name="og:url" content="https://chieri0611.github.io/llsif/card/" />
@@ -26,60 +26,86 @@
 <link rel="apple-touch-icon" href="https://chieri0611.github.io/llsif/apple-touch-icon.png" sizes="180x180" />
 <link rel="icon" type="image/png" href="https://chieri0611.github.io/llsif/android-touch-icon.png" sizes="192x192" />
 
+
 <link rel="stylesheet" type="text/css" href="../style.css" />
 <style tyle="text/css">
+button#list_filter { width: 120px; min-width: auto; }
+button#list_order { width: 80px; min-width: auto; }
+
+.dialog#card_search_dlg { width: 800px; height: 600px; }
+.dialog#card_search_dlg .content_block {
+    background: none; border: none; border-radius: 0; box-shadow: none;
+}
+.dialog#card_search_dlg input#skillname_1 { width: 90%; }
+.dialog#card_search_dlg input#min_trigger, .dialog#card_search_dlg input#max_trigger {
+  min-width: auto; width: 30%;
+}
 </style>
+
 
 <script type="text/javascript" src="../../common.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../scorecalc/llsif_scorecalc.js" charset="UTF-8"></script>
 <script type="text/javascript" src="llsif_cardviewer.js" charset="UTF-8"></script>
 <script type="text/javascript">
-var deckmember = null, cardlist;
+var deckmember = null, cardlist, unitnum = 0;
 var cardlistelem, pagingeelem, listorderbtn, criteriaelem;
 var sort_criteria = 1, cards_order = true, view_sklevel = 1;
 
 function init() {
+  cardlistelem = document.getElementById('card_list');
+  pagingeelem = document.getElementById('paging');
+  listorderbtn = document.getElementById('list_order');
+  criteriaelem = document.getElementById('list_sorttarget');
+
   try {
-    cardlistelem = document.getElementById('card_list');
-    pagingeelem = document.getElementById('paging');
-    listorderbtn = document.getElementById('list_order');
-    criteriaelem = document.getElementById('list_sorttarget');
-
     var pos = 0, urlquery = getURLQueryParam();
+    if(urlquery.hasOwnProperty('unit')) {
+      unitnum = parseInt(urlquery.unit); if(isNaN(unitnum)) unitnum = 0;
+      if(unitnum < 1 || unitnum > MAX_DECK) unitnum = 0;
+    }
     if(urlquery.hasOwnProperty('pos')) {
-      pos = parseInt(urlquery.pos); if(isNaN(pos)) pos = 0;
+      if(urlquery.pos == 'guest') {
+        pos = 'guest';
+      } else {
+        pos = parseInt(urlquery.pos); if(isNaN(pos)) pos = 0;
+        if(pos < 1 || pos > MAX_MEMBER) pos = 0;
+      }
     }
+    const nocache = urlquery.hasOwnProperty('cache') ? urlquery.cache == '0' : false;
 
-    if(pos < 1 || pos > MAX_UNIT) {
-      var url = location.href;
-      url = url.replace(location.search, '');
-      history.replaceState(null, null, url);
-      pos = 0;
-
-    } else {
-      var head = document.getElementById('heading_text');
-      head.className = 'heading_text';
-      head.innerHTML = '<div class="title">入れ替える部員を選択</div>' +
-       '<div class="description"></div><a class="back_button" href="../scorecalc/"></a>';
-    }
-
-    initAllCheckBox('rarity'); initAllCheckBox('attribute');
-    initAllCheckBox('muse'); initAllCheckBox('aqours');
-    initAllCheckBox('nijigaku'); initAllCheckBox('liella'); initAllCheckBox('other');
-    initAllCheckBox('skill'); initAllCheckBox('trigger'); initAllCheckBox('cardtype');
+    replaceCheckBox('rarity'); initAllCheckBox('rarity');
+    replaceCheckBox('attribute'); initAllCheckBox('attribute');
+    replaceCheckBox('muse'); initAllCheckBox('muse');
+    replaceCheckBox('aqours'); initAllCheckBox('aqours');
+    replaceCheckBox('nijigaku'); initAllCheckBox('nijigaku');
+    replaceCheckBox('liella'); initAllCheckBox('liella');
+    replaceCheckBox('member'); initAllCheckBox('member');
+    replaceCheckBox('skill'); initAllCheckBox('skill');
+    replaceCheckBox('trigger'); initAllCheckBox('trigger');
+    replaceCheckBox('cardtype'); initAllCheckBox('cardtype');
     filter_default();
 
     initCardViewer(function() {
-      if(pos != 0) { loadDeck(1); deckmember = deckdata.deck[pos - 1]; }
+      if(unitnum != 0 && pos != 0) {
+        var head = document.getElementById('heading_text');
+        head.className = 'heading_text';
+        head.innerHTML = '<div class="title">入れ替える部員を選択</div>' +
+         '<div class="description"></div><a class="back_button" href="../scorecalc/"></a>';
+
+        loadDeck(unitnum);
+        deckmember = pos == 'guest' ? deckdata.guest : deckdata.deck[pos - 1];
+      }
 
       document.getElementById('last_update').textContent = '最終更新:' + cards_data.update;
-
-      cardlist = cloneObject(cards_data.cards);
-      sortCardList(cardlist, sort_criteria, cards_order);
-      viewCardList(cardlistelem, cardlist, 1, 1, item_select);
-      initPaging(pagingeelem);
-      updatePaging(pagingeelem, cardlist.length / VIEW_PAGEITEM, page_change);
+      initPaging(pagingeelem); filter_change();
     });
+
+    if(location.search == '') return;
+    if(unitnum < 1 || unitnum > MAX_DECK || pos < 1 || pos > MAX_MEMBER) {
+      delete urlquery.unit; delete urlquery.pos;
+    }
+    if(nocache) delete urlquery.cache;
+    replaceURLQueryParam(urlquery);
 
   } catch(e) {
     showDialog('エラーが発生しました。\n' + e.message, 'エラー', 'error');
@@ -112,8 +138,8 @@ function filter_change() {
   var f_aqours = getCheckedValues('aqours').map(function(val) { return parseInt(val); });
   var f_nijigaku = getCheckedValues('nijigaku').map(function(val) { return parseInt(val); });
   var f_liella = getCheckedValues('liella').map(function(val) { return parseInt(val); });
-  var f_other = document.getElementById('other_1').checked ? TENNYUSEI : [];
-  param.member = f_muse.concat(f_aqours, f_nijigaku, f_liella, f_other);
+  var f_member = document.getElementById('member_1').checked ? TENNYUSEI : [];
+  param.member = f_muse.concat(f_aqours, f_nijigaku, f_liella, f_member);
 
   const f_skname = document.getElementById('skillname_1').value;
   if(f_skname != "") param.skillname = f_skname;
@@ -129,15 +155,31 @@ function filter_change() {
 
 
 function filter_default() {
-  allChecked('rarity', true); allChecked('attribute', true);
+  allChecked('rarity', false); allChecked('attribute', true);
+  document.getElementById('rarity_5').checked = true;
   allChecked('muse', true); allChecked('aqours', true);
   allChecked('nijigaku', true); allChecked('liella', true);
-  allChecked('other', true);
+  allChecked('member', true);
   allChecked('skill', true); allChecked('trigger', true);
-  allChecked('cardtype', true);
+  allChecked('cardtype', false);
+  document.getElementById('cardtype_1').checked = true;
+  document.getElementById('cardtype_2').checked = true;
+  document.getElementById('cardtype_3').checked = true;
+  document.getElementById('cardtype_5').checked = true;
+  document.getElementById('view_normal').checked = true;
   document.getElementById('skillname_1').value = "";
   document.getElementById('min_trigger').value = "";
   document.getElementById('max_trigger').value = "";
+}
+
+
+function filter_checkoff() {
+  allChecked('rarity', false); allChecked('attribute', false);
+  allChecked('muse', false); allChecked('aqours', false);
+  allChecked('nijigaku', false); allChecked('liella', false);
+  allChecked('member', false);
+  allChecked('skill', false); allChecked('trigger', false);
+  allChecked('cardtype', false);
 }
 
 
@@ -148,12 +190,13 @@ function criteria_change() {
     case SORT_CRITERIA.CHANCE:
     case SORT_CRITERIA.DURATION:
     case SORT_CRITERIA.VALUE: view_sklevel = 8; break;
-    case SORT_CRITERIA.VALUE_MAX: view_sklevel = 'max'; break;
+    case SORT_CRITERIA.VALUE_MAX: view_sklevel = -1; break;
     default: view_sklevel = 1;
   }
 
+  const viewidolized = document.getElementById('view_idolized').checked;
   sortCardList(cardlist, sort_criteria, cards_order);
-  viewCardList(cardlistelem, cardlist, 1, view_sklevel, item_select);
+  viewCardList(cardlistelem, cardlist, 1, view_sklevel, viewidolized, item_select);
   updatePaging(pagingeelem, cardlist.length / VIEW_PAGEITEM, page_change);
 }
 
@@ -166,11 +209,12 @@ function sortorder_change() {
 
 
 function page_change(pagenum) {
-  viewCardList(cardlistelem, cardlist, pagenum, view_sklevel, item_select);
+  const viewidolized = document.getElementById('view_idolized').checked;
+  viewCardList(cardlistelem, cardlist, pagenum, view_sklevel, viewidolized, item_select);
 }
 
 
-function update() { saveDeck(1); location.href = '../scorecalc/'; }
+function update() { saveDeck(unitnum); location.href = '../scorecalc/'; }
 </script>
 
 
@@ -189,7 +233,7 @@ function update() { saveDeck(1); location.href = '../scorecalc/'; }
 
 <div id="last_update"></div>
 
-<div class="filter_menu">
+<div class="menu_block">
   <button id="list_filter" class="small_button" onclick="show_filterdlg()">絞り込み</button>
   <div class="listbox">
     <div class="listbox_frame"><select id="list_sorttarget" onchange="criteria_change()">
@@ -207,11 +251,17 @@ function update() { saveDeck(1); location.href = '../scorecalc/'; }
   <button id="list_order" class="small_button" onclick="sortorder_change()">降順</button>
 </div>
 
-<div id="card_list" class="card_list"></div>
+<div id="card_list" class="item_list">
+  <noscript>JavaScriptが無効になっています</noscript>
+</div>
 
 <div id="paging" class="paging">
   <button class="paging_left"></button>
-  <div class="paging_main"><div class="paging_container"></div></div>
+  <div class="paging_main">
+    <div class="paging_container">
+      <button class="paging_button select" data-page="1">1</button>
+    </div>
+  </div>
   <button class="paging_right"></button>
 </div>
 
@@ -225,82 +275,86 @@ function update() { saveDeck(1); location.href = '../scorecalc/'; }
 
   <div id="form_rarity" class="content_block">
     <h1>レアリティ</h1>
-    <div class="checkbox"><input type="checkbox" name="rarity" value="1" id="rarity_1" /><label for="rarity_1">N</label></div>
-    <div class="checkbox"><input type="checkbox" name="rarity" value="2" id="rarity_2" /><label for="rarity_2">R</label></div>
-    <div class="checkbox"><input type="checkbox" name="rarity" value="3" id="rarity_3" /><label for="rarity_3">SR</label></div>
-    <div class="checkbox"><input type="checkbox" name="rarity" value="5" id="rarity_4" /><label for="rarity_4">SSR</label></div>
-    <div class="checkbox"><input type="checkbox" name="rarity" value="4" id="rarity_5" /><label for="rarity_5">UR</label></div>
-    <div class="checkbox"><input type="checkbox" name="rarity" value="all" id="rarity_0" /><label for="rarity_0">全て</label></div>
+    <input type="checkbox" name="rarity" value="1" id="rarity_1" data-caption="N" />
+    <input type="checkbox" name="rarity" value="2" id="rarity_2" data-caption="R" />
+    <input type="checkbox" name="rarity" value="3" id="rarity_3" data-caption="SR" />
+    <input type="checkbox" name="rarity" value="5" id="rarity_4" data-caption="SSR" />
+    <input type="checkbox" name="rarity" value="4" id="rarity_5" data-caption="UR" />
+    <input type="checkbox" name="rarity" value="all" id="rarity_0" data-caption="全て" />
   </div>
 
   <div id="form_attribute" class="content_block">
     <h1>属性</h1>
-    <div class="checkbox"><input type="checkbox" name="attribute" value="1" id="attr_1" /><label for="attr_1">スマイル</label></div>
-    <div class="checkbox"><input type="checkbox" name="attribute" value="2" id="attr_2" /><label for="attr_2">ピュア</label></div>
-    <div class="checkbox"><input type="checkbox" name="attribute" value="3" id="attr_3" /><label for="attr_3">クール</label></div>
-    <div class="checkbox"><input type="checkbox" name="attribute" value="5" id="attr_4" /><label for="attr_4">全属性</label></div>
-    <div class="checkbox"><input type="checkbox" name="attribute" value="all" id="attr_0" /><label for="attr_0">全て</label></div>
+    <input type="checkbox" name="attribute" value="1" id="attr_1" data-caption="スマイル" />
+    <input type="checkbox" name="attribute" value="2" id="attr_2" data-caption="ピュア" />
+    <input type="checkbox" name="attribute" value="3" id="attr_3" data-caption="クール" />
+    <input type="checkbox" name="attribute" value="5" id="attr_4" data-caption="全属性" />
+    <input type="checkbox" name="attribute" value="all" id="attr_0" data-caption="全て" />
   </div>
 
   <div id="form_muse" class="content_block">
     <h1>メンバー(μ's)</h1>
-    <div class="checkbox"><input type="checkbox" name="muse" value="1" id="muse_1" /><label for="muse_1">高坂穂乃果</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="2" id="muse_2" /><label for="muse_2">絢瀬絵里</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="3" id="muse_3" /><label for="muse_3">南ことり</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="4" id="muse_4" /><label for="muse_4">園田海未</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="5" id="muse_5" /><label for="muse_5">星空凛</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="6" id="muse_6" /><label for="muse_6">西木野真姫</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="7" id="muse_7" /><label for="muse_7">東條希</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="8" id="muse_8" /><label for="muse_8">小泉花陽</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="9" id="muse_9" /><label for="muse_9">矢澤にこ</label></div>
-    <div class="checkbox"><input type="checkbox" name="muse" value="all" id="muse_0" /><label for="muse_0">全て</label></div>
+    <input type="checkbox" name="muse" value="1" id="muse_1" data-caption="高坂穂乃果" />
+    <input type="checkbox" name="muse" value="2" id="muse_2" data-caption="絢瀬絵里" />
+    <input type="checkbox" name="muse" value="3" id="muse_3" data-caption="南ことり" />
+    <input type="checkbox" name="muse" value="4" id="muse_4" data-caption="園田海未" />
+    <input type="checkbox" name="muse" value="5" id="muse_5" data-caption="星空凛" />
+    <input type="checkbox" name="muse" value="6" id="muse_6" data-caption="西木野真姫" />
+    <input type="checkbox" name="muse" value="7" id="muse_7" data-caption="東條希" />
+    <input type="checkbox" name="muse" value="8" id="muse_8" data-caption="小泉花陽" />
+    <input type="checkbox" name="muse" value="9" id="muse_9" data-caption="矢澤にこ" />
+    <input type="checkbox" name="muse" value="all" id="muse_0" data-caption="全て" />
   </div>
 
   <div id="form_aqours" class="content_block">
     <h1>メンバー(Aqours)</h1>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="101" id="aqours_1" /><label for="aqours_1">高海千歌</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="102" id="aqours_2" /><label for="aqours_2">桜内梨子</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="103" id="aqours_3" /><label for="aqours_3">松浦果南</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="104" id="aqours_4" /><label for="aqours_4">黒澤ダイヤ</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="105" id="aqours_5" /><label for="aqours_5">渡辺曜</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="106" id="aqours_6" /><label for="aqours_6">津島善子</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="107" id="aqours_7" /><label for="aqours_7">国木田花丸</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="108" id="aqours_8" /><label for="aqours_8">小原鞠莉</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="109" id="aqours_9" /><label for="aqours_9">黒澤ルビィ</label></div>
-    <div class="checkbox"><input type="checkbox" name="aqours" value="all" id="aqours_0" /><label for="aqours_0">全て</label></div>
+    <input type="checkbox" name="aqours" value="101" id="aqours_1" data-caption="高海千歌" />
+    <input type="checkbox" name="aqours" value="102" id="aqours_2" data-caption="桜内梨子" />
+    <input type="checkbox" name="aqours" value="103" id="aqours_3" data-caption="松浦果南" />
+    <input type="checkbox" name="aqours" value="104" id="aqours_4" data-caption="黒澤ダイヤ" />
+    <input type="checkbox" name="aqours" value="105" id="aqours_5" data-caption="渡辺曜" />
+    <input type="checkbox" name="aqours" value="106" id="aqours_6" data-caption="津島善子" />
+    <input type="checkbox" name="aqours" value="107" id="aqours_7" data-caption="国木田花丸" />
+    <input type="checkbox" name="aqours" value="108" id="aqours_8" data-caption="小原鞠莉" />
+    <input type="checkbox" name="aqours" value="109" id="aqours_9" data-caption="黒澤ルビィ" />
+    <input type="checkbox" name="aqours" value="all" id="aqours_0" data-caption="全て" />
   </div>
 
   <div id="form_nijigaku" class="content_block">
     <h1>メンバー(虹ヶ咲)</h1>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="201" id="niji_1" /><label for="niji_1">上原歩夢</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="202" id="niji_2" /><label for="niji_2">中須かすみ</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="203" id="niji_3" /><label for="niji_3">桜坂しずく</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="204" id="niji_4" /><label for="niji_4">朝香果林</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="205" id="niji_5" /><label for="niji_5">宮下愛</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="206" id="niji_6" /><label for="niji_6">近江彼方</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="207" id="niji_7" /><label for="niji_7">優木せつ菜</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="208" id="niji_8" /><label for="niji_8">エマ・ヴェルデ</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="209" id="niji_9" /><label for="niji_9">天王寺璃奈</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="212" id="niji_10" /><label for="niji_10">三船栞子</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="213" id="niji_11" /><label for="niji_11">ショウ・ランジュ</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="214" id="niji_12" /><label for="niji_12">ミア・テイラー</label></div>
-    <div class="checkbox"><input type="checkbox" name="nijigaku" value="all" id="nijigaku_0" /><label for="nijigaku_0">全て</label></div>
+    <input type="checkbox" name="nijigaku" value="201" id="niji_1" data-caption="上原歩夢" />
+    <input type="checkbox" name="nijigaku" value="202" id="niji_2" data-caption="中須かすみ" />
+    <input type="checkbox" name="nijigaku" value="203" id="niji_3" data-caption="桜坂しずく" />
+    <input type="checkbox" name="nijigaku" value="204" id="niji_4" data-caption="朝香果林" />
+    <input type="checkbox" name="nijigaku" value="205" id="niji_5" data-caption="宮下愛" />
+    <input type="checkbox" name="nijigaku" value="206" id="niji_6" data-caption="近江彼方" />
+    <input type="checkbox" name="nijigaku" value="207" id="niji_7" data-caption="優木せつ菜" />
+    <input type="checkbox" name="nijigaku" value="208" id="niji_8" data-caption="エマ・ヴェルデ" />
+    <input type="checkbox" name="nijigaku" value="209" id="niji_9" data-caption="天王寺璃奈" />
+    <input type="checkbox" name="nijigaku" value="212" id="niji_10" data-caption="三船栞子" />
+    <input type="checkbox" name="nijigaku" value="213" id="niji_11" data-caption="ショウ・ランジュ" />
+    <input type="checkbox" name="nijigaku" value="214" id="niji_12" data-caption="ミア・テイラー" />
+    <input type="checkbox" name="nijigaku" value="all" id="niji_0" data-caption="全て" />
   </div>
 
   <div id="form_liella" class="content_block">
     <h1>メンバー(Liella!)</h1>
-    <div class="checkbox"><input type="checkbox" name="liella" value="301" id="liella_1" /><label for="liella_1">澁谷かのん</label></div>
-    <div class="checkbox"><input type="checkbox" name="liella" value="302" id="liella_2" /><label for="liella_2">唐可可</label></div>
-    <div class="checkbox"><input type="checkbox" name="liella" value="303" id="liella_3" /><label for="liella_3">嵐千砂都</label></div>
-    <div class="checkbox"><input type="checkbox" name="liella" value="304" id="liella_4" /><label for="liella_4">平安名すみれ</label></div>
-    <div class="checkbox"><input type="checkbox" name="liella" value="305" id="liella_5" /><label for="liella_5">葉月恋</label></div>
-    <div class="checkbox"><input type="checkbox" name="liella" value="all" id="liella_0" /><label for="liella_0">全て</label></div>
+    <input type="checkbox" name="liella" value="301" id="liella_1" data-caption="澁谷かのん" />
+    <input type="checkbox" name="liella" value="302" id="liella_2" data-caption="唐可可" />
+    <input type="checkbox" name="liella" value="303" id="liella_3" data-caption="嵐千砂都" />
+    <input type="checkbox" name="liella" value="304" id="liella_4" data-caption="平安名すみれ" />
+    <input type="checkbox" name="liella" value="305" id="liella_5" data-caption="葉月恋" />
+    <input type="checkbox" name="liella" value="306" id="liella_6" data-caption="桜小路きな子" />
+    <input type="checkbox" name="liella" value="307" id="liella_7" data-caption="米女メイ" />
+    <input type="checkbox" name="liella" value="308" id="liella_8" data-caption="若菜四季" />
+    <input type="checkbox" name="liella" value="309" id="liella_9" data-caption="鬼塚夏美" />
+    <input type="checkbox" name="liella" value="all" id="liella_0" data-caption="全て" />
   </div>
 
-  <div id="form_othermember" class="content_block">
+  <div id="form_member" class="content_block">
     <h1>メンバー(その他)</h1>
-    <div class="checkbox"><input type="checkbox" name="other" value="10001" id="other_1" /><label for="other_1">転入生</label></div>
-    <div class="checkbox"><input type="checkbox" name="other" value="all" id="other_0" /><label for="other_0">全て</label></div>
+    <input type="checkbox" name="member" value="10001" id="member_1" data-caption="転入生" />
+    <input type="checkbox" name="member" value="all" id="member_0" data-caption="全て" />
   </div>
 
   <div id="form_skillname" class="content_block">
@@ -310,32 +364,32 @@ function update() { saveDeck(1); location.href = '../scorecalc/'; }
 
   <div id="form_skill" class="content_block">
     <h1>特技</h1>
-    <div class="checkbox"><input type="checkbox" name="skill" value="0" id="skill_1" /><label for="skill_1">なし</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="4" id="skill_2" /><label for="skill_2">判定強化(小)</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="5" id="skill_3" /><label for="skill_3">判定強化(大)</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="9" id="skill_4" /><label for="skill_4">体力回復</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="11" id="skill_5" /><label for="skill_5">SCOREアップ</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="2000" id="skill_6" /><label for="skill_6">特技発動率アップ</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="2100" id="skill_7" /><label for="skill_7">特技リピート</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="2201" id="skill_8" /><label for="skill_8">PERFECT SCOREアップ</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="2300" id="skill_9" /><label for="skill_9">COMBO FEVER</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="2400" id="skill_10" /><label for="skill_10">パラメータシンクロ</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="2500" id="skill_11" /><label for="skill_11">特技レベルブースト</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="2600" id="skill_12" /><label for="skill_12">パラメータアップ</label></div>
-    <div class="checkbox"><input type="checkbox" name="skill" value="all" id="skill_0" /><label for="skill_0">全て</label></div>
+    <input type="checkbox" name="skill" value="0" id="skill_1" data-caption="なし" />
+    <input type="checkbox" name="skill" value="4" id="skill_2" data-caption="判定強化(小)" />
+    <input type="checkbox" name="skill" value="5" id="skill_3" data-caption="判定強化(大)" />
+    <input type="checkbox" name="skill" value="9" id="skill_4" data-caption="体力回復" />
+    <input type="checkbox" name="skill" value="11" id="skill_5" data-caption="SCOREアップ" />
+    <input type="checkbox" name="skill" value="2000" id="skill_6" data-caption="特技発動率アップ" />
+    <input type="checkbox" name="skill" value="2100" id="skill_7" data-caption="特技リピート" />
+    <input type="checkbox" name="skill" value="2201" id="skill_8" data-caption="PERFECT SCOREアップ" />
+    <input type="checkbox" name="skill" value="2300" id="skill_9" data-caption="COMBO FEVER" />
+    <input type="checkbox" name="skill" value="2400" id="skill_10" data-caption="パラメータシンクロ" />
+    <input type="checkbox" name="skill" value="2500" id="skill_11" data-caption="特技レベルブースト" />
+    <input type="checkbox" name="skill" value="2600" id="skill_12" data-caption="パラメータアップ" />
+    <input type="checkbox" name="skill" value="all" id="skill_0" data-caption="全て" />
   </div>
 
   <div id="form_trigger" class="content_block">
     <h1>発動条件</h1>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="0" id="trigger_1" /><label for="trigger_1">なし</label></div>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="1" id="trigger_2" /><label for="trigger_2">タイマー</label></div>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="3" id="trigger_3" /><label for="trigger_3">リズムアイコン</label></div>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="4" id="trigger_4" /><label for="trigger_4">コンボ</label></div>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="5" id="trigger_5" /><label for="trigger_5">スコア</label></div>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="6" id="trigger_6" /><label for="trigger_6">PERFECT</label></div>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="12" id="trigger_7" /><label for="trigger_7">スターアイコンPERFECT</label></div>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="100" id="trigger_8" /><label for="trigger_8">チェイン</label></div>
-    <div class="checkbox"><input type="checkbox" name="trigger" value="all" id="trigger_0" /><label for="trigger_0">全て</label></div>
+    <input type="checkbox" name="trigger" value="0" id="trigger_1" data-caption="なし" />
+    <input type="checkbox" name="trigger" value="1" id="trigger_2" data-caption="タイマー" />
+    <input type="checkbox" name="trigger" value="3" id="trigger_3" data-caption="リズムアイコン" />
+    <input type="checkbox" name="trigger" value="4" id="trigger_4" data-caption="コンボ" />
+    <input type="checkbox" name="trigger" value="5" id="trigger_5" data-caption="スコア" />
+    <input type="checkbox" name="trigger" value="6" id="trigger_6" data-caption="PERFECT" />
+    <input type="checkbox" name="trigger" value="12" id="trigger_7" data-caption="スターアイコンPERFECT" />
+    <input type="checkbox" name="trigger" value="100" id="trigger_8" data-caption="チェイン" />
+    <input type="checkbox" name="trigger" value="all" id="trigger_0" data-caption="全て" />
   </div>
 
   <div id="form_triggerval" class="content_block">
@@ -347,18 +401,28 @@ function update() { saveDeck(1); location.href = '../scorecalc/'; }
 
   <div id="form_cardtype" class="content_block">
     <h1>種類</h1>
-    <div class="checkbox"><input type="checkbox" name="cardtype" value="1" id="cardtype_1" /><label for="cardtype_1">恒常</label></div>
-    <div class="checkbox"><input type="checkbox" name="cardtype" value="2" id="cardtype_2" /><label for="cardtype_2">イベント限定</label></div>
-    <div class="checkbox"><input type="checkbox" name="cardtype" value="3" id="cardtype_3" /><label for="cardtype_3">特典</label></div>
-    <div class="checkbox"><input type="checkbox" name="cardtype" value="4" id="cardtype_4" /><label for="cardtype_4">サポートメンバー</label></div>
-    <div class="checkbox"><input type="checkbox" name="cardtype" value="5" id="cardtype_5" /><label for="cardtype_5">BOX限定</label></div>
-    <div class="checkbox"><input type="checkbox" name="cardtype" value="all" id="cardtype_0" /><label for="cardtype_0">全て</label></div>
+    <input type="checkbox" name="cardtype" value="1" id="cardtype_1" data-caption="恒常" />
+    <input type="checkbox" name="cardtype" value="2" id="cardtype_2" data-caption="イベント限定" />
+    <input type="checkbox" name="cardtype" value="3" id="cardtype_3" data-caption="特典" />
+    <input type="checkbox" name="cardtype" value="4" id="cardtype_4" data-caption="サポートメンバー" />
+    <input type="checkbox" name="cardtype" value="5" id="cardtype_5" data-caption="BOX限定" />
+    <input type="checkbox" name="cardtype" value="all" id="cardtype_0" data-caption="全て" />
+  </div>
+
+  <div id="form_others" class="content_block">
+    <h1>その他</h1>
+    <div class="switch_button idolized">
+      <input type="radio" name="view_idolized" id="view_normal" value="normal" />
+      <label for="view_normal">通常</label>
+      <input type="radio" name="view_idolized" id="view_idolized" value="idolized" />
+      <label for="view_idolized">覚醒</label>
+    </div>
   </div>
 
   </div>
   <footer>
     <button class="exec_button" onclick="filter_change()">変更する</button>
-    <button class="cancel_button" onclick="filter_default()">デフォルト</button>
+    <button class="default_button" onclick="filter_default()">デフォルト</button>
   </footer>
   <button class="dialog_close" onclick="hiddenDialog('card_search_dlg')"></button>
 </div>
