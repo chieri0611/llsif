@@ -8,7 +8,7 @@
 <meta name="description" content="ブーストリピート用の発動アイコン数・効果量の早見表" />
 <meta name="keywords" content="スクフェス,ブーストリピート" />
 <meta name="author" content="chieri0611" />
-<!-- update: 2022-07-17 -->
+<!-- update: 2023-02-03 -->
 
 <meta name="og:type" content="article" />
 <meta name="og:url" content="https://chieri0611.github.io/llsif/card/" />
@@ -354,7 +354,7 @@ function view_matrixtable(matrixobj, idolized, chanceval, effectval, skilllevel)
           switch(crddata.y) {
             case SKILL.SKILLCHANCE: sk_effectval = sk_effectval.toFixed(2); break;
             case SKILL.SKILLREPEAT: sk_effectval = ''; break;
-            case SKILL.PARAMUP: sk_effectval = Decimal.times(sk_effectval, 100); break;
+            case SKILL.PARAMUP: sk_effectval = Decimal.times(sk_effectval, 100) - 100; break;
           }
           member_elem.querySelector('.skill_effectval').textContent = sk_effectval;
         }
