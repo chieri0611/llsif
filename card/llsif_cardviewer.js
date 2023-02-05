@@ -5,7 +5,7 @@
 *  Description: LLSIF Card Viewer Module
 *  Author: chieri0611
 *  Create: 2022/04/01
-*  Update: 2022/07/17
+*  Update: 2023/02/05
 *
 ********************************************************************** */
 
@@ -527,7 +527,7 @@ function toSkillDesc(card, skill_level) {
     case SKILL.SKILLBOOST:
       skill_desc = sk_trigger + sk_chance + '次に発動する特技のLvが' + sk.v + 'アップする'; break;
     case SKILL.PARAMUP:
-      skill_desc = sk_trigger + sk_chance + sk.s + '秒間' + sk_target + 'の属性Pが' + Decimal.times(sk.v, 100) + '%UPする'; break;
+      skill_desc = sk_trigger + sk_chance + sk.s + '秒間' + sk_target + 'の属性Pが' + (Decimal.times(sk.v, 100) - 100) + '%UPする'; break;
     default: return '無し';
   }
 
