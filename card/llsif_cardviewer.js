@@ -489,6 +489,7 @@ function toSkillDesc(card, skill_level) {
       case EFFECT_TARGET.GROUPGRADE:
         if(Object.values(GROUP).indexOf(card.e[1]) != -1) sk_target = GROUP_NAME[String(card.e[1])] + card.e[2] + '年生';
         break;
+      case 0: sk_target = '他のメンバー'; break;
     }
   }
 
