@@ -44,6 +44,7 @@ button#list_order { width: 80px; min-width: auto; }
 
 
 <script type="text/javascript" src="../../common.js" charset="UTF-8"></script>
+<script type="text/javascript" src="../notice.js" charset="UTF-8"></script>
 <script type="text/javascript" src="../scorecalc/llsif_scorecalc.js" charset="UTF-8"></script>
 <script type="text/javascript" src="llsif_cardviewer.js" charset="UTF-8"></script>
 <script type="text/javascript">
@@ -219,7 +220,7 @@ function update() { saveDeck(unitnum); location.href = '../scorecalc/'; }
 
 
 </head>
-<body class="theme_main" onload="init()">
+<body class="theme_main" onload="init(); sif_Append_Notice();">
 
 
 
