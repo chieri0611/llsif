@@ -7,7 +7,7 @@
 *  Description: llsif Page CSS
 *  Author: chieri0611
 *  Create: 2022/02/13
-*  Update: 2022/07/17
+*  Update: 2023/03/16
 *
 ********************************************************************** */
 
@@ -25,6 +25,7 @@
 *    [-] Loading Window
 *
 *  Content Design
+*    [-] Alert
 *    [-] Heading Text
 *    [-] Section Heading, Content Block
 *    [-] Menu Block
@@ -263,8 +264,9 @@ body.theme_dialog > header, body.theme_dialog > footer, .dialog > header, .dialo
 }
 
 .dialog > footer { height: 82px; padding: 15px 12px 15px; text-align: center; }
+.dialog > footer:empty { height: 0; }
 
-.dialog#notice { height: 500px; padding: 46px 10px 0; }
+.dialog#notice { width: 700px; height: 540px; padding: 46px 10px 0; }
 .dialog#notice > header {
     height: 48px; padding: 3px; background-color: #fff;
     border: 1.5px solid #f69; border-bottom: none; border-radius: 8px 8px 0 0;
@@ -281,6 +283,10 @@ body.theme_dialog > header, body.theme_dialog > footer, .dialog > header, .dialo
     width: 100%; color: #000; font-size: 20px; font-weight: normal;
     text-align: left; white-space: pre-wrap; word-wrap: break-word; line-height: 22px;
     cursor: default; user-select: none; -ms-user-select: none;
+}
+.dialog#notice > .dialog_content > iframe {
+  display: block; position: relative; width: 100%; height: 100%; overflow-y: auto;
+  margin: 0; padding: 0; border: none;
 }
 
 
@@ -337,6 +343,37 @@ body.theme_dialog > header, body.theme_dialog > footer, .dialog > header, .dialo
 /* ----------------------------------------------------------------------
 *  Content Design
 ---------------------------------------------------------------------- */
+
+/* Alert
+====================================================================== */
+.alert {
+  display: flex; position: relative; width: 100%; max-width: 900px; margin: 10px auto 20px; padding: 10px;
+  flex-wrap: nowrap; flex-direction: column; align-items: flex-start; gap: 0 8px;
+  background-color: #fff; border-radius: 8px;
+  box-shadow: 0 0 0 2px #f69 inset; border: 2px solid #fff; cursor: pointer;
+}
+.alert.hidden { display: none; }
+.alert > .alert_title {
+  padding: 4px 16px; background-color: #f69; border-radius: 8px;
+  color: #fff; font-size: 24px; font-weight: bold; text-align: center;
+  white-space: nowrap; text-overflow: ellipsis;
+  user-select: none; -ms-user-select: none;
+}
+.alert > .alert_description {
+  flex: 1; overflow: hidden; padding: 2px; padding-left: 8px;
+  color: #f69; font-size: 24px; font-weight: bold; white-space: nowrap; text-overflow: ellipsis;
+  text-decoration: underline; user-select: none; -ms-user-select: none;
+}
+.alert > .dialog_close {
+  position: absolute; top: 6px; right: 6px;
+}
+
+@media screen and (min-width:768px) {
+  .alert { flex-wrap: wrap; flex-direction: row; align-items: center; }
+  .alert > .alert_description { padding-left: 0; }
+}
+
+
 
 /* Heading Text
 ====================================================================== */
@@ -960,6 +997,7 @@ button.min_button:disabled, button.max_button:disabled { background-color: #bbb;
 .matrix_table tr > td:not(:first-child) { vertical-align: top; white-space: nowrap; }
 .matrix_table td > .member_icon {
     display: inline-block; position: relative; width: 60px; margin: 0 0 auto; padding: 0;
+    vertical-align: top;
 }
 
 
